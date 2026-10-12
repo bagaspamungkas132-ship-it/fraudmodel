@@ -22,12 +22,15 @@ import xgboost as xgb
 warnings.filterwarnings("ignore")
 SEED = 42
 PATH = "/home/cdsw/parquet_output/result/trx_all_enriched_v2.parquet"
-OUT = "/home/cdsw/profiling_phase2/output/v3/"
+OUT = "/home/cdsw/profiling_phase2/output/v3_no_channel/"
 os.makedirs(OUT, exist_ok=True)
 pd.set_option("display.width", 220, "display.max_columns", 50, "display.max_rows", 200)
 
 # Leakage radar: kolom yang sudah dikonfirmasi provenance-nya aman boleh ditaruh di sini
 LEAK_CONFIRMED_OK = set()
+
+# Fitur yang dikeluarkan manual dari pool model (keputusan berbasis OOT: importance sangat kecil)
+EXCLUDE_MANUAL = ["n_channel_l3m"]
 
 def hdr(t): print("\n" + "=" * 100 + f"\n{t}\n" + "=" * 100)
 def save(df, name): df.to_csv(OUT + name, index=False); print(f"[saved] {name}")
@@ -280,6 +283,8 @@ hdr("FASE 3 - FEATURE ENGINEERING: " + ", ".join(FE_PRESENT))
 summ, red = explore(DEV, FULL, "with_fe")
 save(summ, "exploration_summary_with_fe_v3.csv"); save(red, "redundancy_clusters_with_fe_v3.csv")
 POOL = summ[summ.status.isin(["KEEP", "DROP_WEAK"])].feature.tolist()  # weak ditentukan di Fase 6
+POOL = [c for c in POOL if c not in EXCLUDE_MANUAL]
+print("Dikeluarkan manual dari pool:", EXCLUDE_MANUAL)
 print(f"\nPOOL kandidat model ({len(POOL)}): {POOL}")
 
 # ----------------------------------------------------------------------------
@@ -487,6 +492,7 @@ save(ALL[["key1", "accountid", "alert_month", "score", "rank_pct", "flag_recomme
 final_model.save_model(OUT + "xgb_production_v3.json"); print("[saved] xgb_production_v3.json")
 
 card = dict(
+    excluded_manually=EXCLUDE_MANUAL,
     purpose="Prioritisasi alert FDS (ranking/triage), BUKAN deteksi fraud absolut. Label = disposition analis (mewarisi bias analis).",
     data=dict(file=PATH, filter="flag=='FDS'", n_alerts=len(df), n_positive=int(df.y.sum()), base_rate=float(df.y.mean()),
               n_accounts=int(df.accountid.nunique()), months=sorted(df.m.unique().tolist()),
@@ -505,6 +511,7 @@ card = dict(
         "Fitur counterparty popularity dihitung dari snapshot bulanan: risiko leakage ringan (lihat ablation).",
         "Skor pada baris train/validate di scored_all adalah in-sample (optimistis); gunakan hanya baris split=test untuk evaluasi.",
         "rank_pct dihitung per alert_month; di produksi pastikan batch scoring konsisten dengan definisi ini.",
+        "Run ini adalah revisi (n_channel_l3m dibuang) setelah test 2026-06 pernah dilihat di run sebelumnya: angka test tidak lagi 100% murni; andalkan OOT untuk perbandingan.",
         "Perlu monitoring PSI dan refit berkala; drift >0.25 = tinjau ulang."])
 json.dump(card, open(OUT + "model_card_v3.json", "w"), indent=2, default=py); print("[saved] model_card_v3.json")
 
