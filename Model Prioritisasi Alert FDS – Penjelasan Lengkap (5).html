@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Model Prioritisasi Alert FDS – Penjelasan Lengkap</title>
+<style>
+:root{--bg:#f7f7f5;--cd:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ac:#1f6feb;--g2:#d9822b;--g3:#8b5cf6;--g4:#8a8a84;--gr:#c9c9c2;--bd:#e4e4de;--wn:#b4540a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--cd:#212120;--tx:#ecece8;--mu:#a0a09a;--ac:#6ea8ff;--g2:#f0a050;--g3:#a98bff;--gr:#55554f;--bd:#33332f;--wn:#f0a050}}
+:root[data-theme="dark"]{--bg:#161615;--cd:#212120;--tx:#ecece8;--mu:#a0a09a;--ac:#6ea8ff;--g2:#f0a050;--g3:#a98bff;--gr:#55554f;--bd:#33332f;--wn:#f0a050}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 24px 48px}
+h1{font-size:1.5rem;line-height:1.25;margin:0 0 6px}h2{font-size:1.15rem;margin:30px 0 8px}
+p{margin:6px 0}.mu{color:var(--mu);font-size:.88rem}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:16px;margin:12px 0}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.g3{grid-template-columns:repeat(3,1fr)}
+.k{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}.k b{display:block;font-size:1.45rem;line-height:1.2}.k span{font-size:.8rem;color:var(--mu)}
+.big{font-size:1.8rem;font-weight:700;color:var(--ac)}
+input[type=range]{width:100%;accent-color:var(--ac);height:36px}
+svg{width:100%;height:auto;display:block}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.st{display:grid;grid-template-columns:1fr;gap:8px}.st div{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.st b{color:var(--ac)}
+.wn{border-left:4px solid var(--wn)}.ok{border-left:4px solid var(--ac)}
+.fr{display:grid;grid-template-columns:1fr;gap:2px;padding:8px 0;border-top:1px solid var(--bd)}
+.fr:first-child{border-top:0}.fr small{color:var(--mu)}
+.bar{height:8px;border-radius:4px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%}
+.lg span{display:inline-block;margin-right:12px;font-size:.82rem}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+summary{cursor:pointer;font-weight:600;padding:6px 0}
+.res{background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:10px}
+.tip{border-bottom:1px dotted var(--ac);cursor:help;position:relative;font-weight:inherit}
+.tip::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);width:max-content;max-width:250px;background:var(--tx);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:.8rem;line-height:1.4;font-weight:400;font-style:normal;text-align:left;opacity:0;pointer-events:none;transition:opacity .15s;z-index:20;white-space:normal}
+.tip.l::after{left:0;transform:none}.tip.r::after{left:auto;right:0;transform:none}
+.tip:hover::after,.tip:focus::after{opacity:1}
+.lgd{margin-top:6px}.lgd span{display:inline-flex;align-items:center;margin:0 14px 4px 0;font-size:.82rem}.lgd svg{width:30px;height:10px;display:inline-block;margin-right:6px;flex:none}
+.tb{width:100%;border-collapse:collapse;font-size:.86rem}.tb th{text-align:left;color:var(--mu);font-weight:600;font-size:.72rem;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:bottom}.tb td{padding:6px 8px;border-top:1px solid var(--bd);white-space:nowrap}
+.lf{padding:2px 7px;border-radius:6px;font-size:.78rem;font-weight:600}.lf1{background:rgba(26,160,90,.2)}.lf2{background:rgba(230,180,30,.25)}.lf3{background:rgba(220,70,70,.2)}.gp{color:#1a8a4a;font-weight:700}
+.ttp{position:fixed;z-index:30;pointer-events:none;background:var(--tx);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:.8rem;line-height:1.45;max-width:260px;display:none}
+.row{display:grid;gap:14px;grid-template-columns:1fr}.row>.cd{margin:0}.row h2{margin-top:30px}
+.sim{display:grid;gap:18px;grid-template-columns:1fr}
+.gl details{break-inside:avoid}
+@media(min-width:760px){.row{grid-template-columns:1fr 1fr}.sim{grid-template-columns:minmax(280px,.9fr) 1.4fr;align-items:start}.st{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){#ft{column-count:2;column-gap:28px}#ft .fr{break-inside:avoid}.gl{column-count:3;column-gap:28px}}
+.cmh{font-size:1rem;margin:18px 0 8px}
+.cm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cb{border-radius:12px;padding:12px;text-align:center;color:#fff}.cb b{display:block;font-size:1.9rem;line-height:1.2}.cb span{font-size:.82rem}
+.cb .tip{border-bottom-color:#fff}
+.c1{background:#2e9e4a}.c2{background:#d9822b}.c3{background:#c4372f}.c4{background:#5b6f94}
+@media(min-width:760px){.cm{grid-template-columns:repeat(4,1fr)}}
+</style></head><body><main>
+<h1>Model Prioritisasi Alert FDS</h1>
+<p class="mu">Ringkasan untuk tim bisnis. Model membantu menentukan urutan review alert; keputusan akhir tetap berada pada tim analis. Istilah bergaris titik-titik dilengkapi penjelasan: arahkan kursor atau ketuk. Grafik juga dapat disorot untuk melihat angka per titik.</p>
+
+<div class="row">
+<div class="cd ok"><p><b>Ringkasan:</b> setiap alert diberi <span class="tip" tabindex="0" data-tip="Angka 0 sampai 1 dari model. Semakin tinggi, semakin mirip dengan alert yang sebelumnya dinilai suspicious.">skor</span> 0&ndash;1. Semakin tinggi skornya, semakin mirip alert tersebut dengan alert yang sebelumnya dinilai <span class="tip" tabindex="0" data-tip="Penilaian analis bahwa alert mencurigakan setelah diinvestigasi.">suspicious</span> oleh analis. Alert di-ranking dari skor tertinggi sehingga analis dapat memulai dari yang paling berpotensi penting.</p>
+<div class="g g3"><div class="k"><b>60%</b><span>kasus suspicious tertangkap (<span class="tip" tabindex="0" data-tip="Recall: dari seluruh kasus suspicious yang ada, persentase yang berhasil di-flag. Semakin tinggi, semakin sedikit kasus yang terlewat (missed).">recall</span>) dengan me-review <span class="tip" tabindex="0" data-tip="Alert di-ranking dari skor tertinggi. Top 30% berarti 30% alert dengan skor paling tinggi.">top 30% alert</span></span></div><div class="k"><b>76%</b><span>alert yang di-review memang suspicious (<span class="tip" tabindex="0" data-tip="Precision: dari alert yang di-flag atau di-review, persentase yang memang suspicious. Semakin tinggi, semakin sedikit waktu review yang terbuang.">precision</span>) pada top 30%, dibanding rata-rata 38% pada bulan Test</span></div><div class="k"><b>824</b><span>alert FDS periode Jan&ndash;Jun 2026 digunakan untuk training dan testing</span></div></div></div>
+<div class="cd"><b>Cara kerja</b>
+<div class="st" style="margin-top:8px">
+<div><b>1. Training</b><br>Model belajar dari 616 alert periode Jan&ndash;Mei 2026 beserta keputusan analis.</div>
+<div><b>2. Scoring</b><br>Setiap alert diberi skor berdasarkan profil nasabah dan pola transaksi tiga bulan terakhir.</div>
+<div><b>3. Ranking</b><br>Alert diurutkan dari skor tertinggi ke terendah.</div>
+<div><b>4. Keputusan analis</b><br>Analis tetap menginvestigasi dan menentukan hasil akhir.</div></div>
+<p class="mu">Testing memakai 208 alert Juni 2026 yang belum pernah dilihat model (unseen data: <span class="tip" tabindex="0" data-tip="Data alert Juni 2026 yang belum pernah dilihat model saat training (unseen data).">Test</span>).</p></div>
+</div>
+
+<h2>Simulasi 1: Kapasitas review</h2>
+<div class="cd"><div class="sim"><div>
+<p>Analis me-review <span class="tip" tabindex="0" data-tip="Alert di-ranking dari skor tertinggi. Top 30% berarti 30% alert dengan skor paling tinggi.">top</span> <span class="big" id="p1">30%</span> alert</p>
+<input id="s1" type="range" min="1" max="19" value="6" aria-label="Persentase alert teratas">
+<div class="g"><div class="k"><b id="n1"></b><span>alert di-review (dari 208)</span></div><div class="k"><b id="f1"></b><span>kasus suspicious ditemukan (dari 78)</span></div><div class="k"><b id="r1"></b><span><span class="tip" tabindex="0" data-tip="Recall: dari seluruh kasus suspicious yang ada, persentase yang berhasil di-flag. Semakin tinggi, semakin sedikit kasus yang terlewat (missed).">recall</span>: persentase seluruh kasus suspicious yang tertangkap</span></div><div class="k"><b id="h1"></b><span><span class="tip" tabindex="0" data-tip="Precision: dari alert yang di-flag atau di-review, persentase yang memang suspicious. Semakin tinggi, semakin sedikit waktu review yang terbuang.">precision</span>: persentase alert di-review yang memang suspicious (tanpa model: 38%)</span></div></div>
+<p class="mu" id="m1" style="margin-top:10px"></p><p class="mu" id="o1"></p></div>
+<div><svg viewBox="0 0 320 210" role="img" aria-label="Kurva gains"><g id="ch"></g><g id="hv1"></g></svg><div class="lgd"><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--ac)" stroke-width="3"/></svg><span class="tip" tabindex="0" data-tip="Data alert Juni 2026 yang belum pernah dilihat model saat training (unseen data).">Test</span> (Juni)</span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--ac)" stroke-width="3" stroke-dasharray="6 4"/></svg><span class="tip" tabindex="0" data-tip="Forward validation (OOT, out-of-time): model di-training pada bulan-bulan awal lalu diuji pada bulan berikutnya, diulang bergulir tiga kali (Feb, Mar, Mei) sehingga menyerupai penggunaan nyata.">Forward validation</span>: Feb, Mar, Mei</span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--gr)" stroke-width="3" stroke-dasharray="6 4"/></svg>Random (tanpa model)</span></div>
+<p class="mu"><span class="tip" tabindex="0" data-tip="Gains curve: menunjukkan persentase kasus suspicious yang tertangkap bila alert di-review dari ranking teratas hingga titik tertentu.">Gains curve</span>: semakin melengkung ke kiri atas, semakin baik. Pada top 5&ndash;10% jumlah alert hanya 10&ndash;20, sehingga angkanya mudah berubah.</p></div></div></div>
+
+<h2>Simulasi 2: <span class="tip" tabindex="0" data-tip="Batas skor. Alert dengan skor di atas threshold ini di-flag sebagai prioritas review.">Threshold</span> skor</h2>
+<div class="cd"><div class="sim"><div>
+<p>Alert dengan skor minimal <span class="big" id="p5">0,50</span> di-flag sebagai prioritas</p>
+<input id="s5" type="range" min="5" max="95" step="5" value="50" aria-label="Batas skor">
+<div class="g g3"><div class="k"><b id="n5"></b><span>alert di-flag (dari 208)</span></div><div class="k"><b id="a5"></b><span><span class="tip" tabindex="0" data-tip="Precision: dari alert yang di-flag atau di-review, persentase yang memang suspicious. Semakin tinggi, semakin sedikit waktu review yang terbuang.">precision</span>: alert di-flag yang memang suspicious</span></div><div class="k"><b id="c5"></b><span><span class="tip" tabindex="0" data-tip="Recall: dari seluruh kasus suspicious yang ada, persentase yang berhasil di-flag. Semakin tinggi, semakin sedikit kasus yang terlewat (missed).">recall</span>: kasus suspicious yang berhasil di-flag</span></div></div>
+<p class="mu" id="o5" style="margin-top:10px"></p></div>
+<div><svg viewBox="0 0 320 215" role="img" aria-label="Precision dan recall menurut batas skor"><g id="c2"></g><g id="hv2"></g></svg><div class="lgd"><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--ac)" stroke-width="3"/></svg>Precision, <span class="tip" tabindex="0" data-tip="Data alert Juni 2026 yang belum pernah dilihat model saat training (unseen data).">Test</span></span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--g2)" stroke-width="3"/></svg>Recall, <span class="tip" tabindex="0" data-tip="Data alert Juni 2026 yang belum pernah dilihat model saat training (unseen data).">Test</span></span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--ac)" stroke-width="3" stroke-dasharray="6 4"/></svg>Precision, forward validation</span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--g2)" stroke-width="3" stroke-dasharray="6 4"/></svg>Recall, forward validation</span></div></div></div>
+<h3 class="cmh">Isi review queue (Test Juni, N = 208)</h3>
+<div class="cm">
+<div class="cb c1"><b id="cm1"></b><span><span class="tip" tabindex="0" data-tip="True positive: alert yang di-flag dan memang dinilai suspicious.">TP</span> Di-flag dan memang suspicious</span></div>
+<div class="cb c2"><b id="cm2"></b><span><span class="tip" tabindex="0" data-tip="False positive: alert yang di-flag, tetapi ternyata bukan suspicious.">FP</span> Di-flag, tetapi bukan suspicious (waktu review terbuang)</span></div>
+<div class="cb c3"><b id="cm3"></b><span><span class="tip" tabindex="0" data-tip="False negative: kasus suspicious yang tidak di-flag sehingga terlewat (missed).">FN</span> Suspicious yang tidak di-flag (missed)</span></div>
+<div class="cb c4"><b id="cm4"></b><span><span class="tip" tabindex="0" data-tip="True negative: alert bukan suspicious dan memang tidak di-flag.">TN</span> Bukan suspicious dan tidak di-flag</span></div></div>
+<p id="cs" style="margin-top:10px"></p>
+<p class="mu">Menaikkan threshold membuat alert yang di-flag lebih sedikit dan lebih akurat (precision naik), tetapi lebih banyak kasus terlewat (recall turun). Menurunkan threshold berlaku sebaliknya. Pada threshold sangat tinggi jumlah alert sedikit (skor 0,95: 7 alert), sehingga angkanya mudah berubah. Skor forward validation berasal dari model yang di-training pada bulan berbeda, sehingga yang dibandingkan adalah pola kurva, bukan angka persisnya.</p></div>
+
+<h2>Seberapa efektif ranking skornya?</h2>
+<div class="cd"><p class="mu"><span class="tip" tabindex="0" data-tip="Data alert Juni 2026 yang belum pernah dilihat model saat training (unseen data).">Test</span> Juni (208 alert). Alert di-ranking dari skor tertinggi, lalu dibagi menjadi 10 kelompok sama besar (<span class="tip" tabindex="0" data-tip="Decile: 10 kelompok sama besar setelah alert di-ranking dari skor tertinggi (D1) hingga terendah (D10).">decile</span>). Kolom Suspicious menunjukkan penilaian analis, bukan fraud yang telah terkonfirmasi.</p>
+<div class="sim"><div style="overflow-x:auto"><table class="tb"><thead><tr><th>Decile</th><th>Alert</th><th>Suspicious</th><th><span class="tip" tabindex="0" data-tip="Precision: dari alert yang di-flag atau di-review, persentase yang memang suspicious. Semakin tinggi, semakin sedikit waktu review yang terbuang.">precision</span></th><th><span class="tip" tabindex="0" data-tip="Precision kelompok dibagi rata-rata bulan uji (37,5%). Nilai 2× berarti dua kali lebih sering suspicious dibanding alert rata-rata; di bawah 1× berarti lebih jarang.">Lift</span></th><th><span class="tip" tabindex="0" data-tip="Persentase kasus suspicious yang sudah tertangkap bila alert di-review dari D1 hingga kelompok ini.">Cum. recall</span></th></tr></thead><tbody id="dt"></tbody></table></div>
+<div><svg viewBox="0 0 320 215" role="img" aria-label="Precision per decile dan cumulative recall"><g id="dc"></g><g id="hv3"></g></svg><div class="lgd"><span><svg viewBox="0 0 30 10"><rect x="8" y="0" width="14" height="10" rx="2" fill="var(--ac)"/></svg>Precision D1&ndash;D3 (top 30%)</span><span><svg viewBox="0 0 30 10"><rect x="8" y="0" width="14" height="10" rx="2" fill="var(--gr)"/></svg>Precision kelompok lain</span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--g2)" stroke-width="3"/><circle cx="15" cy="5" r="3.5" fill="var(--g2)"/></svg><span class="tip" tabindex="0" data-tip="Persentase kasus suspicious yang sudah tertangkap bila alert di-review dari D1 hingga kelompok ini.">Cum. recall</span></span></div></div></div>
+<p class="mu">Semakin ke bawah, semakin sedikit alert suspicious. D1&ndash;D3 (63 alert) memuat 48 dari 78 kasus (62%); angka ini sedikit berbeda dari 60% di atas karena pembulatan 63 dan 62 alert. Kelompok D8&ndash;D10 hampir tidak memuat kasus sehingga bisa di-review paling akhir.</p></div>
+
+<h2>Feature yang digunakan model (15)</h2>
+<div class="cd"><div class="lg"><span><i style="background:var(--ac)"></i>Profil nasabah</span><span><i style="background:var(--g2)"></i>Pola transaksi</span><span><i style="background:var(--g3)"></i>Rasio terhadap income</span></div>
+<p class="mu">Panjang batang menunjukkan feature importance: seberapa besar akurasi model turun jika feature tersebut diacak (shuffle). Semakin panjang, semakin berpengaruh. Ukuran ini menunjukkan besar pengaruh, bukan arah risikonya.</p>
+<div id="ft"></div><p><b>Catatan:</b> rule FDS yang sudah ada hampir tidak menambah kemampuan ranking model. Sinyal utama berasal dari profil nasabah dan pola transaksinya.</p></div>
+
+<div class="row"><div><h2>Seberapa andal modelnya?</h2>
+<div class="cd"><ul>
+<li><b><span class="tip" tabindex="0" data-tip="Ukuran kualitas ranking model: peluang alert suspicious ditempatkan di atas alert biasa. Nilai 0,5 setara tebakan acak, 1,0 berarti ranking sempurna.">AUC</span> 0,82 (forward validation) dan 0,85 (Test).</b> Nilai 0,5 setara tebakan acak, 1,0 berarti ranking sempurna.</li>
+<li><b>Konsisten antar periode:</b> 0,79; 0,84; dan 0,83 pada tiga putaran forward validation (Feb, Mar, Mei).</li>
+<li><b>Akun baru (unseen account):</b> AUC 0,87 pada akun yang belum pernah dilihat model.</li>
+<li><b>Confidence interval:</b> AUC Test berkisar 0,79&ndash;0,90 (95% CI) karena hanya terdapat 78 kasus suspicious.</li></ul></div></div>
+<div><h2>Keterbatasan (limitations)</h2>
+<div class="cd wn"><ul>
+<li><b>Bukan deteksi fraud.</b> Label berasal dari keputusan analis sehingga dapat mengandung bias dan perbedaan penilaian antar-analis.</li>
+<li><b>Hanya mencakup alert.</b> Model belum pernah melihat nasabah tanpa alert.</li>
+<li><b>Sekitar 1 dari 4 alert pada 30% teratas bukan suspicious.</b> Karena itu belum sesuai untuk auto-block.</li>
+<li><b>Data terbatas:</b> 824 alert dalam enam bulan. Angka dapat bergeser seiring bertambahnya data.</li>
+<li><b>Dua feature mengalami drift antarbulan</b> (usia rekening dan masa kerja) dan perlu dimonitor.</li>
+<li><b>Masih dalam pengecekan:</b> apakah top alert banyak berasal dari kelompok akun yang serupa.</li></ul></div></div></div>
+
+<h2>Glosarium</h2>
+<div class="cd gl"><details><summary>Precision</summary><p>Dari alert yang di-review, persentase yang memang suspicious.</p></details>
+<details><summary>Recall</summary><p>Dari seluruh kasus suspicious, persentase yang berhasil tertangkap di antrean review.</p></details>
+<details><summary>AUC</summary><p>Ukuran kualitas ranking model, dari 0,5 (acak) hingga 1,0 (sempurna).</p></details>
+<details><summary>Forward validation (OOT)</summary><p>Model di-training pada bulan-bulan awal, lalu diuji pada bulan berikutnya; diulang bergulir tiga kali.</p></details>
+<details><summary>Threshold</summary><p>Batas skor; alert dengan skor di atas threshold di-flag sebagai prioritas.</p></details>
+<details><summary>Decile</summary><p>Alert di-ranking dari skor tertinggi lalu dibagi menjadi 10 kelompok sama besar.</p></details>
+<details><summary>Lift</summary><p>Perbandingan precision suatu kelompok dengan rata-rata keseluruhan.</p></details>
+<details><summary>Shadow mode</summary><p>Model berjalan berdampingan dengan proses manual sebagai pembanding, tanpa mengubah keputusan.</p></details></div>
+</main>
+<script>
+var OT=[[0.05,18,16],[0.1,38,34],[0.15,57,46],[0.2,76,59],[0.25,96,69],[0.3,115,79],[0.35,135,94],[0.4,155,105],[0.45,174,116],[0.5,194,121],[0.55,213,128],[0.6,232,138],[0.65,252,143],[0.7,272,145],[0.75,291,149],[0.8,311,150],[0.85,330,152],[0.9,349,155],[0.95,369,155]],TP=[[0.05,10,10],[0.1,20,20],[0.15,31,28],[0.2,41,35],[0.25,52,41],[0.3,62,47],[0.35,72,53],[0.4,83,58],[0.45,93,63],[0.5,104,66],[0.55,114,67],[0.6,124,70],[0.65,135,71],[0.7,145,73],[0.75,156,74],[0.8,166,74],[0.85,176,75],[0.9,187,76],[0.95,197,77]],TS=[[0.05,189,76],[0.1,161,74],[0.15,140,72],[0.2,130,70],[0.25,117,69],[0.3,108,66],[0.35,102,66],[0.4,94,63],[0.45,87,59],[0.5,78,56],[0.55,74,54],[0.6,69,51],[0.65,64,49],[0.7,58,45],[0.75,48,39],[0.8,38,32],[0.85,30,28],[0.9,18,18],[0.95,7,7]],OS=[[0.05,387,155],[0.1,361,155],[0.15,342,154],[0.2,329,153],[0.25,314,151],[0.3,295,150],[0.35,271,146],[0.4,265,146],[0.45,252,141],[0.5,241,139],[0.55,224,132],[0.6,206,121],[0.65,192,118],[0.7,162,104],[0.75,139,95],[0.8,114,82],[0.85,94,75],[0.9,69,59],[0.95,22,20]],DC=[[21,21],[21,14],[21,13],[21,11],[20,7],[21,4],[21,3],[21,1],[21,2],[20,2]],FT=[["Nilai transaksi terbesar (3 bulan)","Satu transaksi dengan nilai terbesar dalam tiga bulan terakhir",0.0417,2],["Jumlah counterparty","Banyaknya counterparty (pihak lawan transaksi) yang berbeda dalam tiga bulan terakhir",0.0303,2],["Masa kerja (tenure, hari)","Dihitung sejak tanggal mulai bekerja hingga bulan alert",0.0268,1],["Income bulanan (tercatat)","Income yang tercatat pada data nasabah",0.0201,1],["Outflow terhadap income","Total outflow 3 bulan dibagi income 3 bulan",0.0183,3],["Inflow terhadap income","Total inflow 3 bulan dibagi income 3 bulan",0.0103,3],["Jumlah transaksi gagal","Transaksi yang gagal dalam tiga bulan terakhir",0.0073,2],["Transaksi terbesar terhadap income","Nilai transaksi terbesar dibagi income bulanan",0.0058,3],["Keseimbangan inflow dan outflow","Seberapa seimbang inflow dibanding outflow",0.0042,3],["Total outflow (3 bulan)","Jumlah seluruh dana keluar",0.0021,2],["Popularitas counterparty","Banyaknya akun lain yang bertransaksi dengan counterparty yang sama",0.0016,2],["Jumlah risk flag aktif","Banyaknya risk flag yang menyala pada nasabah",0.0008,3],["Pass-through cepat","Dana masuk yang keluar kembali dalam 1 jam (rule lama, 6 bulan)",0.0005,2],["Usia rekening","Lama rekening telah dibuka",0.00015,1],["Flag anomali income","Penanda income tidak wajar dari sistem",2e-05,1]],N=208,P=78;
+function $(i){return document.getElementById(i)}
+function fm(x,d){return x.toFixed(d).replace('.',',')}
+function pc(x){return Math.round(x*100)+'%'}
+function draw(k){var x0=34,y0=180,w=270,h=165,pt=[[x0,y0]];
+TP.forEach(function(r){pt.push([x0+w*r[0],y0-h*r[2]/P])});pt.push([x0+w,y0-h]);
+var d=pt.map(function(p,i){return(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' '),c=pt[k],s='';
+s+='<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+w)+'" y2="'+(y0-h)+'" stroke="var(--gr)" stroke-width="2" stroke-dasharray="5 4"/>';
+s+='<path d="'+d+'" fill="none" stroke="var(--ac)" stroke-width="3"/>';
+s+='<path d="M'+x0+' '+y0+' '+OT.map(function(r){return'L'+(x0+w*r[0]).toFixed(1)+' '+(y0-h*r[2]/155).toFixed(1)}).join(' ')+' L'+(x0+w)+' '+(y0-h)+'" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-dasharray="6 4" opacity=".85"/>';
+s+='<line x1="'+c[0]+'" y1="'+y0+'" x2="'+c[0]+'" y2="'+c[1]+'" stroke="var(--ac)" stroke-dasharray="3 3"/><circle cx="'+c[0]+'" cy="'+c[1]+'" r="6" fill="var(--ac)"/>';
+s+='<text x="'+x0+'" y="198" font-size="10" fill="var(--mu)">0%</text><text x="'+(x0+w-60)+'" y="198" font-size="10" fill="var(--mu)">100% alert</text>';
+s+='<text x="2" y="'+(y0-h+4)+'" font-size="10" fill="var(--mu)">100%</text><text x="'+(x0+4)+'" y="'+(y0-h-6)+'" font-size="10" fill="var(--mu)">% kasus tertangkap (recall)</text>';
+$('ch').innerHTML=s}
+function u1(){var k=+$('s1').value,r=TP[k-1],n=r[1],f=r[2],q=OT[k-1];
+$('p1').textContent=Math.round(r[0]*100)+'%';$('n1').textContent=n;$('f1').textContent=f;
+$('r1').textContent=pc(f/P);$('h1').textContent=pc(f/n);
+$('o1').textContent='Forward validation (Feb, Mar, Mei): precision '+pc(q[2]/q[1])+', recall '+pc(q[2]/155)+'.';
+$('m1').textContent='Tanpa model (random), me-review '+n+' alert rata-rata hanya menemukan sekitar '+Math.round(P*n/N)+' kasus suspicious. Dengan model: '+f+' kasus.';draw(k)}
+$('s1').addEventListener('input',u1);
+function ln(T,PP,key,col,dash){var d='',last=1;T.forEach(function(r,i){var y=key=='p'?(r[1]?r[2]/r[1]:last):r[2]/PP;last=y;d+=(i?'L':'M')+(34+270*r[0]).toFixed(1)+' '+(185-165*y).toFixed(1)+' '});
+return '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="3"'+(dash?' stroke-dasharray="6 4" opacity=".85"':'')+'/>'}
+function u3(){var k=+$('s5').value/5,r=TS[k-1],t=r[0],pp=r[2]/r[1],rr=r[2]/P,q=OS[k-1],tp=r[2],fp=r[1]-tp,fn=P-tp,tn=(N-P)-fp;
+$('p5').textContent=fm(t,2);$('n5').textContent=r[1];$('a5').textContent=pc(pp);$('c5').textContent=pc(rr);
+$('o5').textContent='Forward validation (Feb, Mar, Mei): '+q[1]+' alert di-flag, precision '+pc(q[2]/q[1])+', recall '+pc(q[2]/155)+'.';
+$('cm1').textContent=tp;$('cm2').textContent=fp;$('cm3').textContent=fn;$('cm4').textContent=tn;
+$('cs').textContent=r[1]+' alert masuk antrean review; '+fp+' di antaranya bukan suspicious ('+fm(100*fp/r[1],1)+'% dari antrean). '+fn+' kasus suspicious tidak ter-flag (missed).';
+var x=34+270*t,s='<line x1="34" y1="185" x2="304" y2="185" stroke="var(--gr)"/><line x1="34" y1="185" x2="34" y2="20" stroke="var(--gr)"/>';
+s+=ln(OS,155,'p','var(--ac)',1)+ln(OS,155,'r','var(--g2)',1)+ln(TS,78,'p','var(--ac)',0)+ln(TS,78,'r','var(--g2)',0);
+s+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="185" stroke="var(--tx)" stroke-dasharray="3 3"/>';
+s+='<circle cx="'+x+'" cy="'+(185-165*pp).toFixed(1)+'" r="5" fill="var(--ac)"/><circle cx="'+x+'" cy="'+(185-165*rr).toFixed(1)+'" r="5" fill="var(--g2)"/>';
+s+='<text x="34" y="200" font-size="10" fill="var(--mu)">skor 0</text><text x="150" y="200" font-size="10" fill="var(--mu)">0,5</text><text x="270" y="200" font-size="10" fill="var(--mu)">1,0</text>';
+s+='<text x="2" y="24" font-size="10" fill="var(--mu)">100%</text><text x="2" y="188" font-size="10" fill="var(--mu)">0%</text>';
+$('c2').innerHTML=s}
+$('s5').addEventListener('input',u3);
+var cl={1:'var(--ac)',2:'var(--g2)',3:'var(--g3)'},h='';
+FT.forEach(function(f){h+='<div class="fr"><b>'+f[0]+'</b><small>'+f[1]+'</small><div class="bar"><i style="width:'+Math.max(2,f[2]/.0417*100)+'%;background:'+cl[f[3]]+'"></i></div></div>'});
+$('ft').innerHTML=h;
+(function(){var cum=0,h='',x0=36,y0=170,H=150,bw=27,g='',bars='',pts=[];
+for(var v=0;v<=100;v+=25){var yy=y0-H*v/100;g+='<line x1="'+x0+'" y1="'+yy+'" x2="306" y2="'+yy+'" stroke="var(--bd)"/><text x="2" y="'+(yy+3)+'" font-size="9" fill="var(--mu)">'+v+'%</text>'}
+DC.forEach(function(r,i){cum+=r[1];var pr=r[1]/r[0],rc=cum/P,lf=pr/(P/N),c=lf>=1.4?'lf1':lf>=.8?'lf2':'lf3';
+h+='<tr><td>D'+(i+1)+' &middot; '+i*10+'&ndash;'+(i+1)*10+'%</td><td>'+r[0]+'</td><td>'+r[1]+'</td><td'+(pr>=.6?' class="gp"':'')+'>'+fm(pr*100,1)+'%</td><td><span class="lf '+c+'">'+fm(lf,2)+'\u00d7</span></td><td>'+fm(rc*100,1)+'%</td></tr>';
+bars+='<rect x="'+(x0+bw*i+4).toFixed(1)+'" y="'+(y0-H*pr).toFixed(1)+'" width="'+(bw-8)+'" height="'+(H*pr).toFixed(1)+'" rx="2" fill="'+(i<3?'var(--ac)':'var(--gr)')+'"/><text x="'+(x0+bw*(i+.5)).toFixed(1)+'" y="184" font-size="9" text-anchor="middle" fill="var(--mu)">D'+(i+1)+'</text>';
+pts.push([x0+bw*(i+.5),y0-H*rc])});
+var d=pts.map(function(q,i){return(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' ');
+$('dt').innerHTML=h;
+$('dc').innerHTML=g+bars+'<path d="'+d+'" fill="none" stroke="var(--g2)" stroke-width="2.5"/>'+pts.map(function(q){return'<circle cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="3.5" fill="var(--g2)"/>'}).join('')})();
+var TT=document.createElement('div');TT.className='ttp';document.body.appendChild(TT);
+function showTT(e,h){TT.innerHTML=h;TT.style.display='block';var w=TT.offsetWidth,hh=TT.offsetHeight,x=e.clientX+14,y=e.clientY-hh-10;if(x+w>window.innerWidth-8)x=e.clientX-w-14;if(y<8)y=e.clientY+16;TT.style.left=Math.max(8,x)+'px';TT.style.top=y+'px'}
+function hook(id,hid,fn){var sv=$(id).closest('svg'),hv=$(hid);
+function mv(e){var r=sv.getBoundingClientRect(),o=fn((e.clientX-r.left)*320/r.width);if(!o){hv.innerHTML='';TT.style.display='none';return}hv.innerHTML=o.hl;showTT(e,o.tx)}
+sv.addEventListener('pointermove',mv);sv.addEventListener('pointerdown',mv);
+sv.addEventListener('pointerleave',function(e){if(e.pointerType=='mouse'){hv.innerHTML='';TT.style.display='none'}});sv.style.cursor='crosshair'}
+function dot(x,y,c,f){return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5" fill="'+(f?c:'var(--cd)')+'" stroke="'+c+'" stroke-width="2.5"/>'}
+hook('ch','hv1',function(sx){var i=Math.round((sx-34)/13.5)-1;if(i<0||i>18)return null;var a=TP[i],b=OT[i],x=34+270*a[0];
+return{hl:dot(x,180-165*a[2]/78,'var(--ac)',1)+dot(x,180-165*b[2]/155,'var(--ac)',0),
+tx:'<b>Top '+Math.round(a[0]*100)+'% alert</b><br>Test: '+a[1]+' alert, '+a[2]+' suspicious<br>precision '+pc(a[2]/a[1])+', recall '+pc(a[2]/78)+'<br>Forward validation: '+b[1]+' alert, '+b[2]+' suspicious<br>precision '+pc(b[2]/b[1])+', recall '+pc(b[2]/155)}});
+hook('c2','hv2',function(sx){var i=Math.round((sx-34)/13.5)-1;if(i<0||i>18)return null;var a=TS[i],b=OS[i],x=34+270*a[0],Y=function(v){return 185-165*v};
+return{hl:'<line x1="'+x+'" y1="20" x2="'+x+'" y2="185" stroke="var(--mu)" stroke-dasharray="2 3"/>'+dot(x,Y(a[2]/a[1]),'var(--ac)',1)+dot(x,Y(a[2]/78),'var(--g2)',1)+dot(x,Y(b[2]/b[1]),'var(--ac)',0)+dot(x,Y(b[2]/155),'var(--g2)',0),
+tx:'<b>Threshold skor '+fm(a[0],2)+'</b><br>Test: '+a[1]+' alert di-flag<br>precision '+pc(a[2]/a[1])+', recall '+pc(a[2]/78)+'<br>Forward validation: '+b[1]+' alert di-flag<br>precision '+pc(b[2]/b[1])+', recall '+pc(b[2]/155)}});
+hook('dc','hv3',function(sx){var i=Math.floor((sx-36)/27);if(i<0||i>9)return null;var cum=0;for(var j=0;j<=i;j++)cum+=DC[j][1];var r=DC[i],pr=r[1]/r[0];
+return{hl:'<rect x="'+(37+27*i)+'" y="20" width="25" height="150" rx="3" fill="none" stroke="var(--tx)" stroke-dasharray="3 3"/>',
+tx:'<b>D'+(i+1)+' &middot; '+i*10+'&ndash;'+(i+1)*10+'%</b><br>'+r[0]+' alert, '+r[1]+' suspicious<br>precision '+fm(pr*100,1)+'%, lift '+fm(pr/(78/208),2)+'\u00d7<br>cum. recall '+fm(cum/78*100,1)+'%'}});
+function pos(e){var t=e.currentTarget,r=t.getBoundingClientRect();t.classList.toggle('l',r.left<130);t.classList.toggle('r',window.innerWidth-r.right<130)}
+document.querySelectorAll('.tip').forEach(function(t){t.addEventListener('mouseenter',pos);t.addEventListener('focus',pos)});
+u1();u3();
+</script>
+</body></html>
