@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Model Prioritisasi Alert FDS – Penjelasan Lengkap</title>
+<style>
+:root{--bg:#f7f7f5;--cd:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ac:#1f6feb;--g2:#d9822b;--g3:#8b5cf6;--g4:#8a8a84;--gr:#c9c9c2;--bd:#e4e4de;--wn:#b4540a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--cd:#212120;--tx:#ecece8;--mu:#a0a09a;--ac:#6ea8ff;--g2:#f0a050;--g3:#a98bff;--gr:#55554f;--bd:#33332f;--wn:#f0a050}}
+:root[data-theme="dark"]{--bg:#161615;--cd:#212120;--tx:#ecece8;--mu:#a0a09a;--ac:#6ea8ff;--g2:#f0a050;--g3:#a98bff;--gr:#55554f;--bd:#33332f;--wn:#f0a050}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;line-height:1.25;margin:0 0 6px}h2{font-size:1.15rem;margin:30px 0 8px}
+p{margin:6px 0}.mu{color:var(--mu);font-size:.88rem}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:16px;margin:12px 0}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.g3{grid-template-columns:repeat(3,1fr)}
+.k{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}.k b{display:block;font-size:1.45rem;line-height:1.2}.k span{font-size:.8rem;color:var(--mu)}
+.big{font-size:1.8rem;font-weight:700;color:var(--ac)}
+input[type=range]{width:100%;accent-color:var(--ac);height:36px}
+svg{width:100%;height:auto;display:block}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.st{display:grid;grid-template-columns:1fr;gap:8px}.st div{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.st b{color:var(--ac)}
+.wn{border-left:4px solid var(--wn)}.ok{border-left:4px solid var(--ac)}
+.fr{display:grid;grid-template-columns:1fr;gap:2px;padding:8px 0;border-top:1px solid var(--bd)}
+.fr:first-child{border-top:0}.fr small{color:var(--mu)}
+.bar{height:8px;border-radius:4px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%}
+.lg span{display:inline-block;margin-right:12px;font-size:.82rem}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+summary{cursor:pointer;font-weight:600;padding:6px 0}
+.res{background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:10px}
+@media(min-width:620px){.st{grid-template-columns:1fr 1fr}.fr{grid-template-columns:1.1fr 1.6fr 1fr;align-items:center;gap:12px}}
+</style></head><body><main>
+<h1>Model Prioritisasi Alert FDS</h1>
+<p class="mu">Penjelasan lengkap untuk tim bisnis. Model membantu menentukan alert mana yang dibuka lebih dulu. Keputusan akhir tetap di analis.</p>
+
+<div class="cd ok"><p><b>Ringkasnya:</b> setiap alert diberi skor 0–1. Makin tinggi, makin mirip alert yang dulu dinilai analis sebagai <i>suspicious</i>. Alert lalu diurutkan dari skor tertinggi supaya analis mulai dari yang paling mungkin penting.</p>
+<div class="g g3"><div class="k"><b>60%</b><span>kasus suspicious tertangkap hanya dengan membuka 30% alert teratas</span></div><div class="k"><b>76%</b><span>alert di 30% teratas memang suspicious (rata-rata bulan itu 38%)</span></div><div class="k"><b>824</b><span>alert FDS Jan–Jun 2026 dipakai belajar &amp; menguji</span></div></div></div>
+
+<h2>Cara kerjanya</h2>
+<div class="st">
+<div><b>1. Belajar dari riwayat</b><br>Model mempelajari 616 alert Jan–Mei 2026 beserta keputusan analis.</div>
+<div><b>2. Beri skor</b><br>Alert baru dinilai dari profil nasabah dan pola transaksi 3 bulan terakhir.</div>
+<div><b>3. Urutkan</b><br>Alert disusun dari skor tertinggi ke terendah.</div>
+<div><b>4. Analis memutuskan</b><br>Analis tetap menginvestigasi dan memberi keputusan akhir.</div></div>
+<p class="mu">Ujian dilakukan pada alert Juni 2026 (208 alert) yang tidak pernah dilihat model saat belajar.</p>
+
+<h2>Simulasi 1: berapa alert yang dikerjakan?</h2>
+<div class="cd"><p>Analis mengerjakan <span class="big" id="p1">30%</span> alert teratas</p>
+<input id="s1" type="range" min="1" max="19" value="6" aria-label="Persentase alert teratas">
+<div class="g"><div class="k"><b id="n1"></b><span>alert dikerjakan (dari 208)</span></div><div class="k"><b id="f1"></b><span>kasus suspicious ditemukan (dari 78)</span></div><div class="k"><b id="r1"></b><span>dari semua kasus suspicious tertangkap</span></div><div class="k"><b id="h1"></b><span>alert yang dibuka memang suspicious (tanpa model: 38%)</span></div></div>
+<p class="mu" id="m1" style="margin-top:10px"></p><p class="mu" id="o1"></p>
+<svg viewBox="0 0 320 210" role="img" aria-label="Kurva gains"><g id="ch"></g></svg>
+<p class="mu">Garis penuh = Test (Juni). Putus-putus biru = Validasi OOT (Jan–Mei). Garis abu-abu = urutan acak. Makin melengkung ke kiri atas, makin baik. Pada 5&ndash;10% teratas jumlah alert hanya 10&ndash;20, jadi angkanya mudah berubah.</p></div>
+
+<h2>Simulasi 2: pakai batas skor (threshold)</h2>
+<div class="cd"><p>Alert dengan skor minimal <span class="big" id="p5">0,50</span> dianggap prioritas</p>
+<input id="s5" type="range" min="5" max="95" step="5" value="50" aria-label="Batas skor">
+<div class="g g3"><div class="k"><b id="n5"></b><span>alert ditandai (dari 208)</span></div><div class="k"><b id="a5"></b><span>ketepatan: yang ditandai memang suspicious</span></div><div class="k"><b id="c5"></b><span>tangkapan: kasus suspicious yang ikut tertandai</span></div></div>
+
+<p class="mu" id="o5" style="margin-top:10px"></p>
+<svg viewBox="0 0 320 215" role="img" aria-label="Ketepatan dan tangkapan menurut batas skor"><g id="c2"></g></svg>
+<p class="mu">Garis penuh = Test (Juni 2026), putus-putus = Validasi OOT (Jan–Mei). Biru = ketepatan (precision), oranye = tangkapan (recall).</p>
+<p class="mu">Batas skor naik: alert yang ditandai lebih sedikit dan lebih tepat, tapi lebih banyak kasus terlewat. Batas turun: lebih banyak kasus tertangkap, tapi lebih banyak alert yang ternyata bukan suspicious. Pada batas skor sangat tinggi jumlah alert sedikit (skor 0,95: 7 alert), sehingga angkanya mudah berubah. Validasi OOT = skor &ldquo;ke depan&rdquo; dari model yang dilatih pada bulan-bulan sebelumnya (390 alert dari Feb, Mar, Mei), jadi lebih jujur daripada skor latih. Skornya berasal dari beberapa model, jadi bandingkan pola kurvanya, bukan angka persisnya.</p></div>
+
+<h2>Faktor yang dipakai model (15)</h2>
+<div class="cd"><div class="lg"><span><i style="background:var(--ac)"></i>Profil nasabah</span><span><i style="background:var(--g2)"></i>Pola transaksi</span><span><i style="background:var(--g3)"></i>Perbandingan dengan penghasilan</span></div>
+<p class="mu">Batang = seberapa besar akurasi turun jika faktor itu diacak (makin panjang, makin berpengaruh). Ini ukuran pengaruh, bukan arah risiko.</p>
+<div id="ft"></div><p><b>Catatan:</b> rule FDS lama nyaris tidak menambah daya urut model. Sinyal utama datang dari profil nasabah dan pola transaksinya.</p></div>
+<h2>Seberapa bisa dipercaya?</h2>
+<div class="cd"><ul>
+<li><b>AUC 0,82 (validasi) dan 0,85 (uji).</b> AUC = peluang model menaruh alert suspicious di atas alert biasa. 0,5 = tebakan, 1,0 = sempurna.</li>
+<li><b>Konsisten antar bulan:</b> 0,79; 0,84; 0,83 pada tiga simulasi berurutan.</li>
+<li><b>Akun baru:</b> AUC 0,87 pada akun yang belum pernah dilihat model.</li>
+<li><b>Ketidakpastian:</b> rentang AUC uji 0,79–0,90 karena hanya ada 78 kasus suspicious.</li></ul></div>
+
+<h2>Yang perlu diwaspadai</h2>
+<div class="cd wn"><ul>
+<li><b>Bukan deteksi fraud.</b> Label berasal dari keputusan analis. Model meniru kebiasaan analis, termasuk bias dan perbedaan pendapat antar analis.</li>
+<li><b>Hanya melihat alert.</b> Model tidak pernah melihat nasabah tanpa alert, jadi tidak bisa menilai risiko nasabah secara umum.</li>
+<li><b>Sekitar 1 dari 4 alert di 30% teratas bukan suspicious.</b> Tidak cocok untuk blokir otomatis.</li>
+<li><b>Data kecil:</b> 824 alert dalam 6 bulan. Angka bisa bergeser saat data bertambah.</li>
+<li><b>Dua faktor bergeser antar bulan</b> (usia rekening dan lama bekerja), jadi perlu dipantau.</li>
+<li><b>Sedang dicek:</b> apakah alert teratas banyak berasal dari kelompok akun serupa (penghasilan kecil, masa kerja sama).</li></ul></div>
+
+<h2>Istilah singkat</h2>
+<div class="cd"><details><summary>Recall (tangkapan)</summary><p>Dari semua kasus suspicious, berapa persen yang ikut tertangkap di antrean teratas.</p></details>
+<details><summary>Precision (ketepatan)</summary><p>Dari alert yang dibuka, berapa persen yang memang suspicious.</p></details>
+<details><summary>AUC</summary><p>Ukuran kualitas urutan model, dari 0,5 (acak) sampai 1,0 (sempurna).</p></details>
+<details><summary>Shadow mode</summary><p>Model berjalan di samping proses manual untuk dibandingkan, tanpa mengubah keputusan.</p></details></div>
+</main>
+<script>
+var OT=[[0.05,18,16],[0.1,38,34],[0.15,57,46],[0.2,76,59],[0.25,96,69],[0.3,115,79],[0.35,135,94],[0.4,155,105],[0.45,174,116],[0.5,194,121],[0.55,213,128],[0.6,232,138],[0.65,252,143],[0.7,272,145],[0.75,291,149],[0.8,311,150],[0.85,330,152],[0.9,349,155],[0.95,369,155]],N=208,P=78,TP=[[0.05,10,10],[0.1,20,20],[0.15,31,28],[0.2,41,35],[0.25,52,41],[0.3,62,47],[0.35,72,53],[0.4,83,58],[0.45,93,63],[0.5,104,66],[0.55,114,67],[0.6,124,70],[0.65,135,71],[0.7,145,73],[0.75,156,74],[0.8,166,74],[0.85,176,75],[0.9,187,76],[0.95,197,77]];
+function $(i){return document.getElementById(i)}
+function draw(k){var x0=34,y0=180,w=270,h=165,pt=[[x0,y0]];
+TP.forEach(function(r){pt.push([x0+w*r[0],y0-h*r[2]/P])});pt.push([x0+w,y0-h]);
+var d=pt.map(function(p,i){return(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' '),c=pt[k],s='';
+s+='<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+w)+'" y2="'+(y0-h)+'" stroke="var(--gr)" stroke-width="2" stroke-dasharray="5 4"/>';
+s+='<path d="'+d+'" fill="none" stroke="var(--ac)" stroke-width="3"/>';
+s+='<path d="M'+x0+' '+y0+' '+OT.map(function(r){return'L'+(x0+w*r[0]).toFixed(1)+' '+(y0-h*r[2]/155).toFixed(1)}).join(' ')+' L'+(x0+w)+' '+(y0-h)+'" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-dasharray="6 4" opacity=".85"/>';
+s+='<line x1="'+c[0]+'" y1="'+y0+'" x2="'+c[0]+'" y2="'+c[1]+'" stroke="var(--ac)" stroke-dasharray="3 3"/><circle cx="'+c[0]+'" cy="'+c[1]+'" r="6" fill="var(--ac)"/>';
+s+='<text x="'+x0+'" y="198" font-size="10" fill="var(--mu)">0%</text><text x="'+(x0+w-60)+'" y="198" font-size="10" fill="var(--mu)">100% alert</text>';
+s+='<text x="2" y="'+(y0-h+4)+'" font-size="10" fill="var(--mu)">100%</text><text x="'+(x0+4)+'" y="'+(y0-h-6)+'" font-size="10" fill="var(--mu)">% kasus suspicious tertangkap</text>';
+$('ch').innerHTML=s}
+function u1(){var k=+$('s1').value,r=TP[k-1],n=r[1],f=r[2];
+$('p1').textContent=Math.round(r[0]*100)+'%';$('n1').textContent=n;$('f1').textContent=f;
+$('r1').textContent=Math.round(100*f/P)+'%';$('h1').textContent=Math.round(100*f/n)+'%';
+$('m1').textContent='Tanpa model, '+n+' alert rata-rata menemukan sekitar '+Math.round(P*n/N)+' kasus. Dengan model: '+f+' kasus.';var q=OT[k-1];$('o1').textContent='Validasi OOT (Jan–Mei): ketepatan '+Math.round(100*q[2]/q[1])+'%, tangkapan '+Math.round(100*q[2]/155)+'%.';draw(k)}
+$('s1').addEventListener('input',u1);
+var FT=[['Nilai transaksi terbesar (3 bln)','Satu transaksi paling besar dalam 3 bulan terakhir',.0417,2],
+['Jumlah pihak lawan transaksi','Berapa banyak pihak berbeda yang bertransaksi dengan nasabah',.0303,2],
+['Lama bekerja (hari)','Dihitung dari tanggal mulai bekerja sampai bulan alert',.0268,1],
+['Penghasilan bulanan tercatat','Penghasilan yang tercatat di data nasabah',.0201,1],
+['Dana keluar vs penghasilan','Total dana keluar 3 bln dibagi penghasilan 3 bln',.0183,3],
+['Dana masuk vs penghasilan','Total dana masuk 3 bln dibagi penghasilan 3 bln',.0103,3],
+['Jumlah transaksi gagal','Transaksi yang gagal dalam 3 bulan',.0073,2],
+['Transaksi terbesar vs penghasilan','Transaksi terbesar dibagi penghasilan bulanan',.0058,3],
+['Keseimbangan masuk vs keluar','Seberapa seimbang dana masuk dan dana keluar',.0042,3],
+['Total dana keluar (3 bln)','Jumlah seluruh dana keluar',.0021,2],
+['Popularitas pihak lawan','Seberapa banyak akun lain yang bertransaksi dengan pihak lawan yang sama',.0016,2],
+['Jumlah penanda risiko menyala','Banyaknya penanda risiko aktif pada nasabah',.0008,3],
+['Dana masuk lalu keluar cepat','Dana masuk lalu keluar dalam 1 jam (rule lama, 6 bulan)',.0005,2],
+['Usia rekening','Berapa lama rekening dibuka',.00015,1],
+['Penanda penghasilan tidak wajar','Penanda anomali penghasilan dari sistem',.00002,1]];
+var cl={1:'var(--ac)',2:'var(--g2)',3:'var(--g3)'},h='';
+FT.forEach(function(f){h+='<div class="fr"><b>'+f[0]+'</b><small>'+f[1]+'</small><div class="bar"><i style="width:'+Math.max(2,f[2]/.0417*100)+'%;background:'+cl[f[3]]+'"></i></div></div>'});
+$('ft').innerHTML=h;
+var OS=[[0.05,387,155],[0.1,361,155],[0.15,342,154],[0.2,329,153],[0.25,314,151],[0.3,295,150],[0.35,271,146],[0.4,265,146],[0.45,252,141],[0.5,241,139],[0.55,224,132],[0.6,206,121],[0.65,192,118],[0.7,162,104],[0.75,139,95],[0.8,114,82],[0.85,94,75],[0.9,69,59],[0.95,22,20]],TS=[[0.05,189,76],[0.1,161,74],[0.15,140,72],[0.2,130,70],[0.25,117,69],[0.3,108,66],[0.35,102,66],[0.4,94,63],[0.45,87,59],[0.5,78,56],[0.55,74,54],[0.6,69,51],[0.65,64,49],[0.7,58,45],[0.75,48,39],[0.8,38,32],[0.85,30,28],[0.9,18,18],[0.95,7,7]];
+function pc(x){return Math.round(x*100)+'%'}
+function ln(T,PP,key,col,dash){var d='',last=1;T.forEach(function(r,i){var y=key=='p'?(r[1]?r[2]/r[1]:last):r[2]/PP;last=y;d+=(i?'L':'M')+(34+270*r[0]).toFixed(1)+' '+(185-165*y).toFixed(1)+' '});
+return '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="3"'+(dash?' stroke-dasharray="6 4" opacity=".85"':'')+'/>'}
+function u3(){var k=+$('s5').value/5,r=TS[k-1],t=r[0],pp=r[2]/r[1],rr=r[2]/P;
+$('p5').textContent=t.toFixed(2).replace('.',',');$('n5').textContent=r[1];$('a5').textContent=pc(pp);$('c5').textContent=pc(rr);var q=OS[k-1];$('o5').textContent='Validasi OOT (Jan–Mei): '+q[1]+' alert ditandai, ketepatan '+pc(q[2]/q[1])+', tangkapan '+pc(q[2]/155)+'.';
+var x=34+270*t,s='<line x1="34" y1="185" x2="304" y2="185" stroke="var(--gr)"/><line x1="34" y1="185" x2="34" y2="20" stroke="var(--gr)"/>';
+s+=ln(OS,155,'p','var(--ac)',1)+ln(OS,155,'r','var(--g2)',1)+ln(TS,78,'p','var(--ac)',0)+ln(TS,78,'r','var(--g2)',0);
+s+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="185" stroke="var(--tx)" stroke-dasharray="3 3"/>';
+s+='<circle cx="'+x+'" cy="'+(185-165*pp).toFixed(1)+'" r="5" fill="var(--ac)"/><circle cx="'+x+'" cy="'+(185-165*rr).toFixed(1)+'" r="5" fill="var(--g2)"/>';
+s+='<text x="34" y="200" font-size="10" fill="var(--mu)">skor 0</text><text x="150" y="200" font-size="10" fill="var(--mu)">0,5</text><text x="270" y="200" font-size="10" fill="var(--mu)">1,0</text>';
+s+='<text x="2" y="24" font-size="10" fill="var(--mu)">100%</text><text x="2" y="188" font-size="10" fill="var(--mu)">0%</text>';
+$('c2').innerHTML=s}
+$('s5').addEventListener('input',u3);
+u1();u3();
+</script></body></html>
