@@ -374,18 +374,21 @@ print("Catatan: pakai fitur popularity? ", [c for c in POPULARITY if c in FINAL]
 hdr("FASE 7 - THRESHOLD (OOT)")
 def f05(p, r): return 0 if (p + r) == 0 else 1.25 * p * r / (0.25 * p + r)
 OOT["rank_pct"] = OOT.groupby("m")["score"].rank(ascending=False, method="first") / OOT.groupby("m")["score"].transform("size")
-trows = []
-for pct in [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.50]:
-    f = OOT.rank_pct <= pct; tp = (f & (OOT.y == 1)).sum()
-    pr, rc = tp / max(f.sum(), 1), tp / OOT.y.sum()
-    trows.append(dict(strategy=f"rank_top_{int(pct*100)}%", n_flag=int(f.sum()), precision=pr, recall=rc, F05=f05(pr, rc)))
-for q in np.arange(0.40, 0.96, 0.05):
-    th = OOT.score.quantile(q); f = OOT.score >= th
-    if f.sum() < 30: continue
-    tp = (f & (OOT.y == 1)).sum(); pr, rc = tp / f.sum(), tp / OOT.y.sum()
-    trows.append(dict(strategy=f"score>={th:.3f}", n_flag=int(f.sum()), precision=pr, recall=rc, F05=f05(pr, rc)))
-thr = pd.DataFrame(trows); print(thr.round(3).to_string(index=False)); save(thr, "threshold_oot_v3.csv")
-best_f05 = thr[thr.strategy.str.startswith("score>=")].sort_values("F05", ascending=False).head(1)
+def sim_grid(d, split):
+    """Grid simulasi lengkap: threshold skor 0.05..0.95 dan top-% alert 5%..95% (langkah 5%)."""
+    rows, P_, N_ = [], int(d.y.sum()), len(d)
+    for mode in ["score_threshold", "top_pct"]:
+        for lv in range(5, 100, 5):
+            f = (d.score >= lv / 100) if mode == "score_threshold" else (d.rank_pct <= lv / 100)
+            n = int(f.sum()); tp = int((f & (d.y == 1)).sum())
+            pr = tp / n if n else np.nan; rc = tp / P_
+            rows.append(dict(split=split, mode=mode, level=lv / 100, n_flag=n, pct_flag=n / N_, tp=tp,
+                             n_total=N_, n_pos=P_, precision=pr, recall=rc,
+                             F05=f05(pr, rc) if n else np.nan, lift=pr / (P_ / N_) if n else np.nan))
+    return pd.DataFrame(rows)
+thr = sim_grid(OOT, "oot")
+print(thr.round(3).to_string(index=False)); save(thr, "threshold_oot_v3.csv")  # menimpa tabel lama
+best_f05 = thr[(thr["mode"] == "score_threshold") & (thr.n_flag >= 30)].sort_values("F05", ascending=False).head(1)
 print("\nBest F0.5 score-threshold (min 30 flag):\n", best_f05.round(3).to_string(index=False))
 RANK_PCT = 0.30
 print(f"\nPILIHAN: rank-percentile top {int(RANK_PCT*100)}% per bulan.\n"
@@ -427,6 +430,18 @@ g = T.groupby("decile").agg(n=("y", "size"), n_susp=("y", "sum"), min_score=("sc
 g["precision"] = g.n_susp / g.n; g["lift"] = g.precision / yt.mean()
 g["cum_recall"] = g.n_susp.cumsum() / yt.sum(); g["cum_precision"] = g.n_susp.cumsum() / g.n.cumsum()
 print("\nLIFT / GAINS (decile):\n", g.round(3).to_string(index=False)); save(g, "gains_test_v3.csv")
+
+# Simulasi lengkap Test + data siap-pakai untuk halaman HTML (menimpa data lama)
+TEST_GRID = sim_grid(TEST, "test"); save(TEST_GRID, "simulation_test_v3.csv")
+print("\nSIMULASI TEST (threshold skor & top-%):\n", TEST_GRID.round(3).to_string(index=False))
+sim_json = {}
+for nm, gdf in [("test", TEST_GRID), ("oot", thr)]:
+    sim_json[nm] = {"n_total": int(gdf.n_total.iloc[0]), "n_pos": int(gdf.n_pos.iloc[0])}
+    for mode in ["score_threshold", "top_pct"]:
+        sub = gdf[gdf["mode"] == mode]
+        sim_json[nm][mode] = [[float(a), int(b), int(c)] for a, b, c in zip(sub.level, sub.n_flag, sub.tp)]  # [level, n_flag, tp]
+json.dump(sim_json, open(OUT + "simulation_data_v3.json", "w")); print("[saved] simulation_data_v3.json")
+print("\nJSON_SIMULASI_BEGIN\n" + json.dumps(sim_json) + "\nJSON_SIMULASI_END")
 
 # PSI
 def psi(a, b):
