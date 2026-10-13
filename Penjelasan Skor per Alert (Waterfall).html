@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Penjelasan Skor per Alert (Waterfall)</title>
+<style>
+:root{--bg:#f7f7f5;--cd:#fff;--tx:#1d1d1b;--mu:#6b6b66;--a:#1f6feb;--b:#d9822b;--g:#2e9e4a;--gr:#c9c9c2;--bd:#e4e4de;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--cd:#212120;--tx:#ecece8;--mu:#a0a09a;--a:#6ea8ff;--b:#f0a050;--g:#4cc38a;--gr:#55554f;--bd:#33332f}}
+:root[data-theme="dark"]{--bg:#161615;--cd:#212120;--tx:#ecece8;--mu:#a0a09a;--a:#6ea8ff;--b:#f0a050;--g:#4cc38a;--gr:#55554f;--bd:#33332f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 24px 48px}
+h1{font-size:1.5rem;line-height:1.25;margin:0 0 6px}h2{font-size:1.15rem;margin:30px 0 8px}
+p{margin:6px 0}.mu{color:var(--mu);font-size:.88rem}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;gap:14px;grid-template-columns:1fr}.row>.cd{margin:0}
+.st{display:grid;gap:8px}.st div{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}.st b{color:var(--a)}
+.k{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}.k b{display:block;font-size:1.6rem;line-height:1.2}.k span{font-size:.82rem;color:var(--mu)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+input[type=range]{width:100%;accent-color:var(--a);height:36px}
+select,textarea,button{font:inherit;font-size:.9rem;color:var(--tx);background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
+textarea{width:100%;min-height:110px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem}
+button{cursor:pointer}button.p{background:var(--a);color:#fff;border-color:var(--a)}
+pre{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;overflow-x:auto;font-size:.76rem;line-height:1.45;margin:8px 0}
+svg{width:100%;height:auto;display:block}
+.lgd span{display:inline-flex;align-items:center;margin:0 14px 4px 0;font-size:.82rem}.lgd i{width:14px;height:14px;border-radius:4px;display:inline-block;margin-right:6px}
+.tip{border-bottom:1px dotted var(--a);cursor:help;position:relative}
+.tip::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);width:max-content;max-width:250px;background:var(--tx);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:.8rem;line-height:1.4;font-weight:400;text-align:left;opacity:0;pointer-events:none;transition:opacity .15s;z-index:20;white-space:normal}
+.tip:hover::after,.tip:focus::after{opacity:1}
+.eq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.82rem;margin-top:10px}.eq span{border:1px solid var(--bd);border-radius:8px;padding:4px 8px;text-align:center;line-height:1.3}.badge{display:inline-block;background:var(--b);color:#fff;border-radius:999px;font-size:.72rem;font-weight:600;padding:1px 8px;margin-left:6px}
+.lgd svg{width:30px;height:10px;display:inline-block;margin-right:6px;flex:none}
+.ok{border-left:4px solid var(--a)}
+.wn{border-left:4px solid var(--b)}ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+@media(min-width:760px){.row{grid-template-columns:1fr 1fr}.st{grid-template-columns:1fr 1fr}.sim{display:grid;grid-template-columns:minmax(260px,.8fr) 1.4fr;gap:18px;align-items:center}}
+</style></head><body><main>
+<h1>Penjelasan Skor per Alert (Waterfall)</h1>
+<p class="mu">Menjawab pertanyaan &ldquo;kenapa alert ini skornya tinggi, dan bagaimana menghitungnya?&rdquo; Istilah bergaris titik-titik dapat disorot untuk melihat penjelasannya.</p>
+
+<div class="row"><div class="cd"><b>Cara skor dihitung</b><div class="st" style="margin-top:8px">
+<div><b>1. Pohon keputusan</b><br>Model berisi ratusan pohon kecil. Tiap pohon mengajukan pertanyaan ya/tidak ke feature alert dan berakhir di satu nilai.</div>
+<div><b>2. Penjumlahan</b><br>Nilai semua pohon dijumlahkan dengan nilai dasar menjadi skor mentah (<span class="tip" tabindex="0" data-tip="Log-odds: skala sebelum diubah ke 0&ndash;1. Naik 1 poin berarti odds sekitar 2,7 kali lebih besar.">log-odds</span>).</div>
+<div><b>3. Konversi ke 0&ndash;1</b><br>Skor = 1 / (1 + e<sup>&minus;log-odds</sup>).</div>
+<div><b>4. Alasan per alert</b><br>Log-odds dibagi ke tiap feature dengan <span class="tip" tabindex="0" data-tip="TreeSHAP: metode yang membagi skor model menjadi kontribusi tiap feature untuk satu alert. Jumlah kontribusi ditambah nilai dasar sama dengan log-odds.">TreeSHAP</span>. Tiga kontribusi positif terbesar menjadi alasan utama.</div></div></div>
+<div class="cd wn"><b>Hal yang perlu diluruskan saat menjelaskan</b><ul>
+<li><b>Skor 0,99 bukan 99% peluang fraud.</b> Yang ditebak adalah penilaian analis (suspicious), dan angka skor belum terbukti akurat sebagai probabilitas (lihat bagian 3).</li>
+<li><b>Alasan menjelaskan model, bukan sebab-akibat.</b> Income kecil tidak otomatis berarti fraud.</li>
+<li><b>Income tercatat tampaknya bucket</b> (Rp5 juta, Rp10 juta, Rp100 juta), bukan angka pasti.</li></ul></div></div>
+
+<h2>Pohon keputusan: satu model, banyak pohon</h2>
+<div class="cd ok"><p><b>Jawaban singkat: tidak, tiap account tidak punya pohon sendiri.</b></p><ul>
+<li>Model berisi satu set pohon (ratusan) yang dibuat sekali saat training dan <b>sama untuk semua alert dan account</b>.</li>
+<li>Yang berbeda adalah <b>jalurnya</b>: nilai feature tiap alert berbeda, sehingga melewati cabang berbeda dan berakhir di daun berbeda.</li>
+<li>Account yang sama dengan nilai feature berbeda (misalnya bulan berikutnya) juga melewati jalur berbeda, sehingga skornya berubah.</li>
+<li>Pohonnya baru berubah saat model dilatih ulang.</li></ul></div>
+
+<div class="cd"><b>Satu set pohon, jalur berbeda</b>
+<p class="mu">Geser nilai feature, atau pilih dua alert contoh, untuk melihat jalur yang dilewati di dua pohon. Pertanyaan dan angka di pohon hanya ilustrasi.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button id="pa">Alert A: outflow tinggi, gagal banyak, income kecil</button><button id="pb">Alert B: outflow rendah, gagal sedikit, income besar</button></div>
+<div id="ins"></div>
+<div class="row"><div><b>Pohon 1</b><div id="t1"></div></div><div><b>Pohon 2</b><div id="t2"></div></div></div>
+<div class="eq" id="eq"></div>
+<p class="mu">Model sebenarnya menjumlahkan ratusan pohon seperti ini. Dua pohon di sini hanya menunjukkan bahwa pohon yang sama menghasilkan nilai daun berbeda untuk alert yang berbeda.</p></div>
+
+<div class="cd"><b>Bagaimana pohon ditentukan?</b>
+<ol><li>Semua alert training mulai dari satu node.</li>
+<li>Model mencoba setiap feature dan setiap titik potong, lalu menghitung <span class="tip" tabindex="0" data-tip="Gain: ukuran seberapa rapi sebuah potongan memisahkan alert suspicious dan bukan di kedua cabang, dibanding sebelum dipotong. Makin besar makin baik.">gain</span> masing-masing.</li>
+<li>Pasangan feature dan titik potong dengan gain terbesar dipilih sebagai pertanyaan.</li>
+<li>Langkah yang sama diulang di tiap cabang sampai mencapai kedalaman maksimal atau cabangnya terlalu kecil.</li>
+<li>Nilai daun dihitung dari alert yang jatuh ke daun itu, lalu dikalikan <span class="tip" tabindex="0" data-tip="Learning rate: seberapa besar tiap pohon boleh mengubah skor. Nilai kecil membuat model belajar pelan dan lebih stabil.">learning rate</span>.</li>
+<li>Pohon berikutnya dibuat untuk memperbaiki kesalahan yang masih tersisa dari pohon sebelumnya, sampai jumlah pohon tercapai.</li></ol>
+<p class="mu" style="margin-top:10px">Contoh sederhana dengan 16 alert rekaan: pertanyaannya &ldquo;transaksi gagal &ge; t?&rdquo;. Geser titik potong untuk melihat gain tiap pilihan.</p>
+<div class="sim"><div><p>Transaksi gagal &ge; <b id="th" style="font-size:1.6rem;color:var(--a)">5</b>?</p><input id="tsl" type="range" min="1" max="12" step="1" value="5" aria-label="Titik potong">
+<div class="g3" style="grid-template-columns:1fr 1fr"><div class="k"><b id="kl"></b><span id="kln"></span></div><div class="k"><b id="kr"></b><span id="krn"></span></div></div><p id="kg" style="margin-top:10px"></p></div>
+<div><div id="cs" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;align-items:center"></div><svg viewBox="0 0 320 170" role="img" aria-label="Gain tiap titik potong"><g id="gs"></g></svg>
+<p class="mu">Batang = gain tiap titik potong (hijau = terbaik, bingkai = pilihan sekarang). Kotak kecil = alert (angka = transaksi gagal; oranye = suspicious).</p></div></div>
+<p class="mu">Gain = &frac12; [ G<sub>kiri</sub>&sup2;/(H<sub>kiri</sub>+&lambda;) + G<sub>kanan</sub>&sup2;/(H<sub>kanan</sub>+&lambda;) &minus; G&sup2;/(H+&lambda;) ], dengan &lambda; = 1 pada contoh ini (model kita memakai nilai lebih besar). Pohon pertama dimulai dari peluang 0,5 untuk semua alert.</p></div>
+
+<div class="cd"><b>Pengaturan yang membentuk pohon</b><p class="mu">Nilai terpilih pada run terakhir.</p>
+<ul><li><b>n_estimators = 300:</b> jumlah pohon.</li>
+<li><b>max_depth = 4:</b> paling banyak 4 level pertanyaan per pohon, sehingga pohon tetap sederhana.</li>
+<li><b>min_child_weight = 5:</b> sebuah daun harus memuat cukup data, supaya pohon tidak menghafal segelintir alert.</li>
+<li><b>learning_rate = 0,05:</b> tiap pohon hanya menyumbang sedikit ke skor.</li>
+<li><b>reg_lambda = 10:</b> menekan nilai daun agar tidak ekstrem.</li>
+<li><b>subsample = colsample_bytree = 0,7:</b> tiap pohon hanya melihat 70% alert dan 70% feature secara acak, sehingga pohon-pohonnya beragam.</li></ul></div>
+
+<h2>1. Dari log-odds ke skor</h2>
+<div class="cd"><div class="sim"><div>
+<p>Log-odds: <b id="lo">4,25</b></p><input id="s" type="range" min="-6" max="6" step="0.05" value="4.25" aria-label="Log-odds">
+<div class="g3" style="grid-template-columns:1fr 1fr"><div class="k"><b id="pr"></b><span>skor (0&ndash;1)</span></div><div class="k"><b id="od"></b><span>odds (perbandingan suspicious : bukan)</span></div></div></div>
+<div><svg viewBox="0 0 320 190" role="img" aria-label="Kurva sigmoid"><g id="sg"></g></svg></div></div>
+<p class="mu">Geser untuk melihat bahwa skor naik cepat di sekitar 0 dan melandai di ujung. Nilai awal 4,25 adalah log-odds alert skor tertinggi di bawah.</p></div>
+
+<h2>2. Waterfall: dari nilai dasar ke skor akhir</h2>
+<div class="cd"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><label for="sel"><b>Alert:</b></label><select id="sel"></select></div>
+<p id="sm" style="margin:10px 0 4px"></p>
+<svg id="wf" viewBox="0 0 640 300" role="img" aria-label="Waterfall kontribusi feature"></svg>
+<div class="lgd"><span><i style="background:var(--b)"></i>Menaikkan skor</span><span><i style="background:var(--a)"></i>Menurunkan skor</span><span><i style="background:var(--gr)"></i>Nilai dasar / sisa</span><span><i style="background:var(--g)"></i>Skor akhir (log-odds)</span></div>
+<p class="mu" id="nt"></p></div>
+
+<h2>3. Skor vs kenyataan</h2>
+<div class="cd"><p>Alert datang satu per satu, sehingga decile (yang butuh seluruh alert terkumpul dan diurutkan) tidak bisa dipakai saat alert muncul. Karena itu skor dibaca per <b>rentang skor tetap</b> (lebar 0,1): &ldquo;dari alert yang skornya di rentang ini, berapa persen yang dulu dinilai suspicious?&rdquo; Ini disebut <span class="tip" tabindex="0" data-tip="Kalibrasi: apakah skor sesuai dengan frekuensi sebenarnya. Skor 0,7 terkalibrasi bila sekitar 70% alert di rentang itu memang suspicious.">kalibrasi</span>.</p>
+<div class="sim"><div><p>Skor alert baru: <b id="cv" style="font-size:1.6rem;color:var(--a)">0,85</b></p><input id="sc" type="range" min="0" max="100" step="1" value="85" aria-label="Skor alert">
+<div class="g3" style="grid-template-columns:1fr 1fr"><div class="k"><b id="cr"></b><span>rentang skor</span></div><div class="k"><b id="ck"></b><span>kalau skor = peluang, seharusnya sekitar ini</span></div><div class="k"><b id="ct"></b><span id="ctn"></span></div><div class="k"><b id="cf"></b><span id="cfn"></span></div></div>
+<p class="mu" id="cx" style="margin-top:10px"></p></div>
+<div><svg viewBox="0 0 320 215" role="img" aria-label="Skor vs persentase suspicious sebenarnya"><g id="cg"></g></svg>
+<div class="lgd"><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--a)" stroke-width="3"/><circle cx="15" cy="5" r="3.5" fill="var(--a)"/></svg>Test (Juni)</span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--a)" stroke-width="3" stroke-dasharray="6 4"/><circle cx="15" cy="5" r="3.5" fill="var(--cd)" stroke="var(--a)" stroke-width="2"/></svg><span class="tip" tabindex="0" data-tip="Model dilatih pada bulan-bulan awal lalu diuji pada bulan berikutnya, diulang bergulir (Feb, Mar, Mei).">Forward validation</span></span><span><svg viewBox="0 0 30 10"><line x1="15" y1="0" x2="15" y2="10" stroke="var(--a)" stroke-width="2"/><line x1="10" y1="0" x2="20" y2="0" stroke="var(--a)" stroke-width="2"/><line x1="10" y1="10" x2="20" y2="10" stroke="var(--a)" stroke-width="2"/></svg>Rentang 95% (Test)</span><span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--gr)" stroke-width="2" stroke-dasharray="5 4"/></svg>Kalibrasi sempurna</span></div></div></div>
+<p class="mu">Titik di atas garis diagonal berarti skor terlalu rendah dibanding kenyataan; di bawah garis berarti skor terlalu percaya diri. Pada rentang skor 0,6&ndash;0,9 tingkat suspicious sebenarnya cenderung di bawah angka skor, dan pola ini tampak di kedua data. Tiap rentang hanya berisi 9&ndash;48 alert (Test) sehingga rentang 95% lebar. Gunakan sebagai gambaran, bukan angka pasti. Skor forward validation berasal dari model yang dilatih pada bulan berbeda, jadi bandingkan polanya.</p></div>
+
+<h2>4. Pakai data alert Anda sendiri</h2>
+<div class="cd"><p>Tempel hasil ekspor kontribusi per alert (format JSON di bawah), lalu waterfall akan tampil lengkap dengan semua feature. Data diproses di browser ini saja dan tidak dikirim ke mana pun. Samarkan ID alert sebelum halaman ini dibagikan.</p>
+<textarea id="ta" placeholder='[{"key":"A1","score":0.97,"bias":-0.4,"contrib":{"monthly_income":0.8,"n_failed_trx_l3m":0.6},"values":{"monthly_income":5000000,"n_failed_trx_l3m":8}}]'></textarea>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="p" id="go">Tampilkan</button><button id="ex">Isi contoh format</button></div><p class="mu" id="er"></p>
+<p><b>Ekspor dari script</b> (sesuaikan nama variabel dengan script Anda):</p>
+<pre>import json, numpy as np
+c = production_model.get_booster().predict(xgb.DMatrix(X_all), pred_contribs=True)
+names = list(X_all.columns)
+idx = list(np.argsort(-score_all)[:10]) + list(np.argsort(score_all)[:10])  # 10 tertinggi + 10 terendah
+out = [{"key": str(df.iloc[i][KEY_COL]), "score": float(score_all[i]), "bias": float(c[i, -1]),
+        "contrib": {n: float(c[i, j]) for j, n in enumerate(names)},
+        "values": {n: (None if np.isnan(X_all.iloc[i, j]) else float(X_all.iloc[i, j]))
+                   for j, n in enumerate(names)}} for i in idx]
+json.dump(out, open(OUTPUT_DIR + "/waterfall_top_bottom.json", "w"))</pre></div>
+</main>
+<script>
+function $(i){return document.getElementById(i)}
+function fm(x,d){return x.toFixed(d).replace('.',',')}
+var NM={monthly_income:'Income bulanan',n_failed_trx_l3m:'Transaksi gagal (3 bln)',employment_tenure_days:'Masa kerja (hari)',max_amount_l3m:'Transaksi terbesar',n_unique_counterparty_l3m:'Jumlah counterparty',fe_out_to_income:'Outflow / income',fe_in_to_income:'Inflow / income',fe_maxamt_to_income:'Transaksi terbesar / income',fe_flow_balance:'Keseimbangan inflow-outflow',total_amount_out_l3m:'Total outflow (3 bln)',account_age:'Usia rekening',max_counterparty_popularity_l3m:'Popularitas counterparty',fe_total_flags_on:'Jumlah risk flag aktif'};
+function nm(f){return NM[f]||f}
+function nf(v){return v==null?'NA':(+v).toLocaleString('id-ID',{maximumFractionDigits:3})}
+function sg(){var x=+$('s').value,p=1/(1+Math.exp(-x));$('lo').textContent=fm(x,2);$('pr').textContent=fm(p*100,1)+'%';$('od').textContent=p>.9995?'> 2.000 : 1':fm(p/(1-p),2)+' : 1';
+var s='<line x1="30" y1="160" x2="310" y2="160" stroke="var(--gr)"/><line x1="170" y1="10" x2="170" y2="160" stroke="var(--bd)"/><line x1="30" y1="10" x2="310" y2="10" stroke="var(--bd)"/>',d='';
+for(var i=0;i<=120;i++){var t=-6+i/10,y=1/(1+Math.exp(-t));d+=(i?'L':'M')+(30+280*i/120).toFixed(1)+' '+(160-150*y).toFixed(1)+' '}
+s+='<path d="'+d+'" fill="none" stroke="var(--a)" stroke-width="3"/>';
+var cx=30+280*(x+6)/12,cy=160-150*p;s+='<line x1="'+cx+'" y1="160" x2="'+cx+'" y2="'+cy+'" stroke="var(--b)" stroke-dasharray="3 3"/><circle cx="'+cx+'" cy="'+cy+'" r="6" fill="var(--b)"/>';
+s+='<text x="2" y="14" font-size="9" fill="var(--mu)">100%</text><text x="2" y="163" font-size="9" fill="var(--mu)">0%</text><text x="30" y="178" font-size="9" fill="var(--mu)">-6</text><text x="166" y="178" font-size="9" fill="var(--mu)">0</text><text x="296" y="178" font-size="9" fill="var(--mu)">+6</text><text x="100" y="186" font-size="9" fill="var(--mu)">log-odds</text>';
+$('sg').innerHTML=s}
+$('s').addEventListener('input',sg);sg();
+var A=[],EX=[{key:'Contoh 1 (skor tertinggi Test)',score:.985928,items:[['monthly_income',.89,5000000],['n_failed_trx_l3m',.65,11],['employment_tenure_days',.62,1127]],real:1},
+{key:'Contoh 2',score:.983178,items:[['monthly_income',.87,1000000],['employment_tenure_days',.73,730],['n_failed_trx_l3m',.68,8]],real:1},
+{key:'Contoh 3',score:.974529,items:[['monthly_income',.74,5000000],['n_failed_trx_l3m',.73,8],['n_unique_counterparty_l3m',.56,10]],real:1},
+{key:'Contoh 4: skor rendah',score:.03,items:[['monthly_income',-.85,1e8],['n_failed_trx_l3m',-.6,0],['n_unique_counterparty_l3m',-.45,2]],ill:1},
+{key:'Contoh 5: skor rendah',score:.07,items:[['fe_out_to_income',-.55,.3],['n_failed_trx_l3m',-.5,0],['monthly_income',-.4,5e7]],ill:1}];
+function norm(a){return a.map(function(r){var items=r.items;if(!items){items=Object.keys(r.contrib||{}).map(function(f){return[f,r.contrib[f],(r.values||{})[f]]})}return{key:String(r.key),score:+r.score,bias:r.bias,items:items,real:r.real,ill:r.ill}})}
+function show(i){var a=A[i];if(!a)return;var raw=Math.log(a.score/(1-a.score)),rows=[],cum=0,sum=0;
+var it=a.items.slice().sort(function(x,y){return Math.abs(y[1])-Math.abs(x[1])});it.forEach(function(r){sum+=r[1]});
+var base=a.bias!=null?a.bias:raw-sum;
+rows.push({l:a.bias!=null?'Nilai dasar':'Nilai dasar + feature lain (sisa)',v:base,t:'b'});
+var top=it.slice(0,8),rest=it.slice(8);top.forEach(function(r){rows.push({l:nm(r[0])+' = '+nf(r[2]),v:r[1],t:r[1]>=0?'p':'n'})});
+if(rest.length){var rs=0;rest.forEach(function(r){rs+=r[1]});rows.push({l:'Feature lainnya ('+rest.length+')',v:rs,t:rs>=0?'p':'n'})}
+rows.push({l:'Skor akhir (log-odds)',v:raw,t:'t'});
+var pts=[0];cum=0;rows.forEach(function(r,k){if(r.t=='t'){pts.push(0,raw)}else{pts.push(cum);cum+=r.v;pts.push(cum)}});
+var mn=Math.min.apply(null,pts.concat([0])),mx=Math.max.apply(null,pts.concat([raw])),sp=(mx-mn)||1,X=function(v){return 230+390*(v-mn)/sp},H=26,s='';
+s+='<line x1="'+X(0)+'" y1="4" x2="'+X(0)+'" y2="'+(rows.length*H+8)+'" stroke="var(--gr)"/>';cum=0;
+rows.forEach(function(r,k){var y=8+k*H,x1,x2,c;if(r.t=='t'){x1=0;x2=raw;c='var(--g)'}else{x1=cum;x2=cum+r.v;cum=x2;c=r.t=='b'?'var(--gr)':r.t=='p'?'var(--b)':'var(--a)'}
+var xa=X(Math.min(x1,x2)),w=Math.max(2,Math.abs(X(x2)-X(x1)));
+s+='<text x="224" y="'+(y+14)+'" font-size="11" text-anchor="end" fill="var(--tx)">'+r.l+'</text><rect x="'+xa+'" y="'+y+'" width="'+w+'" height="'+(H-8)+'" rx="3" fill="'+c+'"><title>'+r.l+': '+(r.v>0&&r.t!='t'?'+':'')+fm(r.v,2)+'</title></rect><text x="'+(xa+w+5)+'" y="'+(y+14)+'" font-size="11" fill="var(--mu)">'+(r.v>0&&r.t!='t'?'+':'')+fm(r.v,2)+'</text>'});
+var h=rows.length*H+16;$('wf').setAttribute('viewBox','0 0 640 '+h);$('wf').innerHTML=s;
+$('sm').innerHTML=(a.ill?'<span class="badge">Ilustrasi, bukan data nyata</span><br>':'')+'<b>Skor '+fm(a.score,3)+'</b> = 1 / (1 + e<sup>'+(raw>0?'&minus;':'')+fm(Math.abs(raw),2)+'</sup>) &nbsp;|&nbsp; log-odds '+fm(raw,2)+' = nilai dasar '+(a.bias!=null?'':'dan feature lain ')+fm(base,2)+' + kontribusi feature '+fm(sum,2);
+$('nt').textContent=a.ill?'Contoh ilustrasi: skor berada dalam rentang kelompok bawah di Test (D10: 0,015 sampai 0,051; D9: 0,051 sampai 0,087), tetapi kontribusi tiap feature adalah angka rekaan untuk menunjukkan cara membaca waterfall, bukan hasil model. Arahnya mengikuti pola umum (income besar, tanpa transaksi gagal, sedikit counterparty cenderung menurunkan skor). Untuk contoh nyata, ekspor 10 alert terendah (bagian 3).':a.real?'Data contoh: tiga alasan teratas diambil dari output script. Kontribusi feature lainnya belum diekspor, sehingga digabung dengan nilai dasar menjadi satu batang (sisa).':(rest.length?'Batang diurutkan dari kontribusi terbesar; sisanya digabung.':'Semua feature ditampilkan.')}
+function fill(){$('sel').innerHTML=A.map(function(a,i){return'<option value="'+i+'">'+a.key+' (skor '+fm(a.score,3)+(a.ill?', ilustrasi':'')+')</option>'}).join('');show(0)}
+$('sel').addEventListener('change',function(){show(+$('sel').value)});
+$('go').addEventListener('click',function(){try{var j=JSON.parse($('ta').value);if(!Array.isArray(j))j=[j];var n=norm(j);if(!n.length)throw 0;A=n;$('er').textContent='';fill()}catch(e){$('er').textContent='Format tidak valid. Pastikan JSON berisi array dengan key, score, dan contrib.'}});
+$('ex').addEventListener('click',function(){$('ta').value=JSON.stringify([{key:'A1',score:.97,bias:-.4,contrib:{monthly_income:1.1,n_failed_trx_l3m:.8,max_amount_l3m:.5,account_age:-.2,n_unique_counterparty_l3m:1,employment_tenure_days:.676},values:{monthly_income:5e6,n_failed_trx_l3m:8,max_amount_l3m:35e7,account_age:.4,n_unique_counterparty_l3m:9,employment_tenure_days:822}}],null,1)});
+A=norm(EX);fill();
+var CB={t:{n:[47,31,22,14,16,9,11,20,20,18],k:[4,4,4,3,7,5,6,13,14,18]},f:{n:[29,32,34,30,24,35,44,48,45,69],k:[0,2,3,4,7,18,17,22,23,59]}};
+function wl(k,n){var p=k/n,z=1.96,c=(p+z*z/(2*n))/(1+z*z/n),h=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/(1+z*z/n);return[Math.max(0,c-h),Math.min(1,c+h)]}
+function cal(){var v=+$('sc').value/100,b=Math.min(9,Math.floor(v*10+1e-9)),X=function(s){return 36+270*s},Y=function(q){return 180-160*q},g='';
+$('cv').textContent=fm(v,2);$('cr').textContent=fm(b/10,1)+'\u2013'+fm((b+1)/10,1);$('ck').textContent=Math.round((b/10+.05)*100)+'%';
+function pt(o,i){return o.k[i]/o.n[i]}
+var t=pt(CB.t,b),f=pt(CB.f,b),wt=wl(CB.t.k[b],CB.t.n[b]);
+$('ct').textContent=Math.round(t*100)+'%';$('ctn').textContent='Test: '+CB.t.k[b]+' dari '+CB.t.n[b]+' alert suspicious (rentang 95%: '+Math.round(wt[0]*100)+'\u2013'+Math.round(wt[1]*100)+'%)';
+$('cf').textContent=Math.round(f*100)+'%';$('cfn').textContent='Forward validation: '+CB.f.k[b]+' dari '+CB.f.n[b]+' alert suspicious';
+$('cx').textContent='Dari alert yang skornya di rentang '+fm(b/10,1)+'\u2013'+fm((b+1)/10,1)+', sekitar '+Math.round(t*100)+'% (Test) dan '+Math.round(f*100)+'% (forward validation) dinilai suspicious oleh analis.';
+g+='<rect x="'+X(b/10)+'" y="20" width="27" height="160" fill="var(--a)" opacity=".1"/><line x1="36" y1="180" x2="306" y2="180" stroke="var(--gr)"/><line x1="36" y1="180" x2="36" y2="20" stroke="var(--gr)"/><line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(1)+'" y2="'+Y(1)+'" stroke="var(--gr)" stroke-width="2" stroke-dasharray="5 4"/>';
+var dt='',df='';for(var i=0;i<10;i++){var cx=X(i/10+.05);dt+=(i?'L':'M')+cx+' '+Y(pt(CB.t,i)).toFixed(1)+' ';df+=(i?'L':'M')+cx+' '+Y(pt(CB.f,i)).toFixed(1)+' '}
+g+='<path d="'+df+'" fill="none" stroke="var(--a)" stroke-width="2.5" stroke-dasharray="6 4" opacity=".85"/><path d="'+dt+'" fill="none" stroke="var(--a)" stroke-width="3"/>';
+for(var i=0;i<10;i++){var cx=X(i/10+.05),w=wl(CB.t.k[i],CB.t.n[i]);g+='<line x1="'+cx+'" y1="'+Y(w[0]).toFixed(1)+'" x2="'+cx+'" y2="'+Y(w[1]).toFixed(1)+'" stroke="var(--a)" stroke-width="1.5" opacity=".6"/><circle cx="'+cx+'" cy="'+Y(pt(CB.t,i)).toFixed(1)+'" r="'+(i==b?6:4)+'" fill="var(--a)"/><circle cx="'+cx+'" cy="'+Y(pt(CB.f,i)).toFixed(1)+'" r="'+(i==b?5.5:3.5)+'" fill="var(--cd)" stroke="var(--a)" stroke-width="2"/>'}
+g+='<line x1="'+X(v)+'" y1="20" x2="'+X(v)+'" y2="180" stroke="var(--b)" stroke-width="2"/><text x="2" y="24" font-size="9" fill="var(--mu)">100%</text><text x="2" y="183" font-size="9" fill="var(--mu)">0%</text><text x="36" y="196" font-size="9" fill="var(--mu)">skor 0</text><text x="166" y="196" font-size="9" fill="var(--mu)">0,5</text><text x="290" y="196" font-size="9" fill="var(--mu)">1,0</text><text x="40" y="14" font-size="9" fill="var(--mu)">% alert yang dinilai suspicious</text>';
+$('cg').innerHTML=g}
+$('sc').addEventListener('input',cal);cal();
+var S0={out:3,fail:8,cp:4,inc:5,mx:.8},ST={},IN=[['out','Outflow / income (×)',0,5,.1],['fail','Transaksi gagal (3 bln)',0,15,1],['cp','Jumlah counterparty',0,15,1],['inc','Income bulanan (juta Rp)',1,100,1],['mx','Transaksi terbesar / income (×)',0,5,.1]];
+function sv(x){return(x>=0?'+':'\u2212')+fm(Math.abs(x),2)}
+(function(){var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 18px">';IN.forEach(function(r){ST[r[0]]=S0[r[0]];h+='<div><label for="in_'+r[0]+'"><b>'+r[1]+':</b> <span id="v_'+r[0]+'"></span></label><input id="in_'+r[0]+'" type="range" min="'+r[2]+'" max="'+r[3]+'" step="'+r[4]+'" value="'+S0[r[0]]+'"></div>'});$('ins').innerHTML=h+'</div>';
+IN.forEach(function(r){$('in_'+r[0]).addEventListener('input',function(){ST[r[0]]=+this.value;tu()})})})();
+var TD=[{q:['Outflow / income > 2×?','Transaksi gagal ≥ 5?','Counterparty ≥ 8?'],v:[.45,.1,.05,-.4],a:function(s){return s.out>2},b:function(s,a){return a?s.fail>=5:s.cp>=8}},
+{q:['Income ≤ Rp10 juta?','Counterparty ≥ 5?','Transaksi terbesar / income > 1×?'],v:[.25,.05,-.05,-.35],a:function(s){return s.inc<=10},b:function(s,a){return a?s.cp>=5:s.mx>1}}];
+function dt(d,s){var a=d.a(s),b=d.b(s,a),li=a?(b?0:1):(b?2:3),on=[a,!a,a&&b,a&&!b,!a&&b,!a&&!b],E=[[260,62,130,110],[260,62,390,110],[130,150,65,198],[130,150,195,198],[390,150,325,198],[390,150,455,198]],h='<svg viewBox="0 0 520 250" role="img" aria-label="Pohon keputusan">';
+E.forEach(function(e,i){h+='<line x1="'+e[0]+'" y1="'+e[1]+'" x2="'+e[2]+'" y2="'+e[3]+'" stroke="'+(on[i]?'var(--b)':'var(--gr)')+'" stroke-width="'+(on[i]?4:2)+'"/>'});
+h+='<g font-size="11" fill="var(--tx)" text-anchor="middle">';
+[[165,22,190,260,d.q[0]],[45,110,170,130,d.q[1]],[305,110,170,390,d.q[2]]].forEach(function(n){h+='<rect x="'+n[0]+'" y="'+n[1]+'" width="'+n[2]+'" height="40" rx="8" fill="var(--cd)" stroke="var(--a)" stroke-width="1.5"/><text x="'+n[3]+'" y="'+(n[1]+24)+'">'+n[4]+'</text>'});
+[[15,65],[145,195],[275,325],[405,455]].forEach(function(l,i){h+='<rect x="'+l[0]+'" y="198" width="100" height="36" rx="8" fill="var(--bd)" stroke="'+(i==li?'var(--b)':'var(--gr)')+'" stroke-width="'+(i==li?3:1)+'" opacity="'+(i==li?1:.5)+'"/><text x="'+l[1]+'" y="221" font-weight="700">'+sv(d.v[i])+'</text>'});
+h+='<g fill="var(--mu)" font-size="10"><text x="185" y="92">Ya</text><text x="335" y="92">Tidak</text><text x="85" y="178">Ya</text><text x="185" y="178">Tidak</text><text x="345" y="178">Ya</text><text x="445" y="178">Tidak</text></g></g></svg>';
+return{svg:h,v:d.v[li]}}
+function tu(){var t1=dt(TD[0],ST),t2=dt(TD[1],ST),base=-.3,raw=base+t1.v+t2.v,p=1/(1+Math.exp(-raw));
+$('t1').innerHTML=t1.svg;$('t2').innerHTML=t2.svg;IN.forEach(function(r){$('v_'+r[0]).textContent=fm(ST[r[0]],r[4]<1?1:0)});
+$('eq').innerHTML='<span>Nilai dasar<br><b>'+sv(base)+'</b></span>+<span>Pohon 1<br><b>'+sv(t1.v)+'</b></span>+<span>Pohon 2<br><b>'+sv(t2.v)+'</b></span>+<span>… ratusan pohon lain</span>=<span>Log-odds sementara<br><b>'+sv(raw)+'</b></span>&rarr;<span>Skor sementara<br><b>'+fm(p*100,1)+'%</b></span>'}
+function pre(o){for(var k in o){ST[k]=o[k];var e=$('in_'+k);e.value=o[k]}tu()}
+$('pa').addEventListener('click',function(){pre({out:3.5,fail:9,cp:3,inc:5,mx:.5})});
+$('pb').addEventListener('click',function(){pre({out:.8,fail:1,cp:2,inc:60,mx:.3})});
+var XD=[0,0,1,1,2,2,3,4,5,6,7,8,9,10,11,12],YD=[0,0,0,1,0,0,1,0,1,1,0,1,1,1,1,1],LM=1;
+function sg2(t){var G=0,H=0,gl=0,hl=0,nl=0,pl=0,nr=0,pr=0;XD.forEach(function(x,i){var g=.5-YD[i];G+=g;H+=.25;if(x<t){gl+=g;hl+=.25;nl++;pl+=YD[i]}else{nr++;pr+=YD[i]}});var gr=G-gl,hr=H-hl;return{gain:.5*(gl*gl/(hl+LM)+gr*gr/(hr+LM)-G*G/(H+LM)),nl:nl,pl:pl,nr:nr,pr:pr,wl:-gl/(hl+LM),wr:-gr/(hr+LM)}}
+function ts(){var t=+$('tsl').value,r=sg2(t),best=1,bg=-1,gs=[];for(var k=1;k<=12;k++){var q=sg2(k).gain;gs.push(q);if(q>bg){bg=q;best=k}}
+$('th').textContent=t;$('kl').textContent=r.nl+' alert';$('kln').textContent='Cabang kiri (gagal < '+t+'): '+r.pl+' suspicious. Nilai daun (sebelum learning rate) '+sv(r.wl);
+$('kr').textContent=r.nr+' alert';$('krn').textContent='Cabang kanan (gagal ≥ '+t+'): '+r.pr+' suspicious. Nilai daun (sebelum learning rate) '+sv(r.wr);
+$('kg').innerHTML='<b>Gain = '+fm(r.gain,2)+'</b> '+(t==best?'(titik potong terbaik)':'(terbaik: gagal ≥ '+best+', gain '+fm(bg,2)+')');
+var c='',x;for(var i=0;i<XD.length;i++){if(i&&XD[i]>=t&&XD[i-1]<t)c+='<span style="width:2px;height:24px;background:var(--tx);margin:0 4px"></span>';c+='<span style="min-width:20px;text-align:center;border-radius:5px;padding:2px 0;font-size:.75rem;color:#fff;background:'+(YD[i]?'var(--b)':'var(--mu)')+'">'+XD[i]+'</span>'}$('cs').innerHTML=c;
+var mx=Math.max.apply(null,gs),h='<line x1="30" y1="140" x2="310" y2="140" stroke="var(--gr)"/>';
+gs.forEach(function(q,i){var k=i+1,bx=34+i*23,bh=Math.max(1,110*q/mx);h+='<rect x="'+bx+'" y="'+(140-bh)+'" width="19" height="'+bh+'" rx="2" fill="'+(k==best?'var(--g)':'var(--a)')+'" opacity="'+(k==best?1:.6)+'"'+(k==t?' stroke="var(--tx)" stroke-width="2"':'')+'/><text x="'+(bx+9.5)+'" y="154" font-size="9" text-anchor="middle" fill="var(--mu)">'+k+'</text>'});
+h+='<text x="34" y="14" font-size="9" fill="var(--mu)">gain tiap titik potong (gagal ≥ t)</text>';$('gs').innerHTML=h}
+$('tsl').addEventListener('input',ts);tu();ts();
+</script></body></html>
