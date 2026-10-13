@@ -32,7 +32,7 @@ LEAK_CONFIRMED_OK = set()
 # Fitur yang dikeluarkan manual dari pool model (keputusan berbasis OOT: importance sangat kecil)
 EXCLUDE_MANUAL = ["n_channel_l3m"]
 
-# Tier operasional berdasarkan PROBABILITAS TERKALIBRASI per alert (alert datang per transaksi, jadi tidak ada top-% per bulan).
+# Tier operasional berdasarkan SKOR MODEL ASLI (tanpa kalibrasi) per alert; alert datang per transaksi, jadi tidak ada top-% per bulan.
 # Batas ini adalah titik awal; sesuaikan dengan kapasitas review dan hasil shadow mode.
 TIER_CUTS = dict(tinggi=0.80, sedang=0.40)
 
@@ -427,19 +427,7 @@ print(thr.round(3).to_string(index=False)); save(thr, "threshold_oot_v3.csv")  #
 best_f05 = thr[(thr["mode"] == "score_threshold") & (thr.n_flag >= 30)].sort_values("F05", ascending=False).head(1)
 print("\nBest F0.5 score-threshold (min 30 flag):\n", best_f05.round(3).to_string(index=False))
 RANK_PCT = 0.30   # hanya untuk analisis kapasitas/pembanding; BUKAN aturan operasional (alert datang per transaksi)
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import brier_score_loss, log_loss
-def logit(p): p = np.clip(np.asarray(p, float), 1e-6, 1 - 1e-6); return np.log(p / (1 - p))
-def fit_platt(sc, y):
-    m = LogisticRegression(C=1e6, solver="lbfgs", max_iter=1000).fit(logit(sc).reshape(-1, 1), np.asarray(y))
-    return float(m.intercept_[0]), float(m.coef_[0][0])
-def apply_platt(sc, ab): return 1 / (1 + np.exp(-(ab[0] + ab[1] * logit(sc))))
-def tier_of(pc): return np.where(np.asarray(pc) >= TIER_CUTS["tinggi"], "Tinggi", np.where(np.asarray(pc) >= TIER_CUTS["sedang"], "Sedang", "Rendah"))
-def calib_metrics(y, pp):
-    y = np.asarray(y); pp = np.clip(np.asarray(pp, float), 1e-6, 1 - 1e-6); b = np.minimum((pp * 10).astype(int), 9)
-    ece = sum(abs(y[b == k].mean() - pp[b == k].mean()) * (b == k).mean() for k in range(10) if (b == k).any())
-    sl = LogisticRegression(C=1e6, solver="lbfgs", max_iter=1000).fit(logit(pp).reshape(-1, 1), y)
-    return dict(brier=brier_score_loss(y, pp), logloss=log_loss(y, pp), ece=ece, cal_slope=float(sl.coef_[0][0]), cal_intercept=float(sl.intercept_[0]))
+def tier_of(sc): return np.where(np.asarray(sc) >= TIER_CUTS["tinggi"], "Tinggi", np.where(np.asarray(sc) >= TIER_CUTS["sedang"], "Sedang", "Rendah"))
 def wilson(k, n, z=1.96):
     if n == 0: return (np.nan, np.nan)
     q = k / n; c = (q + z * z / (2 * n)) / (1 + z * z / n); h = z * np.sqrt(q * (1 - q) / n + z * z / (4 * n * n)) / (1 + z * z / n)
@@ -451,14 +439,11 @@ def tier_table(d, split):
         rows.append(dict(split=split, tier=t, n=n, pct_alert=n / len(d), n_susp=k, susp_rate=k / n if n else np.nan,
                          ci95_lo=lo, ci95_hi=hi, share_of_all_susp=k / max(int(d.y.sum()), 1)))
     return pd.DataFrame(rows)
-CAL_OOT = fit_platt(OOT.score.values, OOT.y.values)   # kalibrator dilatih HANYA dari prediksi out-of-time sebelum test
-OOT["p_cal"] = apply_platt(OOT.score.values, CAL_OOT); OOT["tier"] = tier_of(OOT.p_cal.values)
-print(f"\nKALIBRASI (Platt) dari prediksi OOT: logit(p_cal) = {CAL_OOT[0]:+.3f} + {CAL_OOT[1]:.3f} * logit(skor)")
-print("Catatan: pada OOT kalibrator dilatih di data yang sama (in-sample); evaluasi jujur ada di Test (Fase 8).")
-tt_oot = tier_table(OOT, "oot (in-sample kalibrator)"); print(tt_oot.round(3).to_string(index=False))
-print(f"\nPILIHAN OPERASIONAL: probabilitas terkalibrasi per alert -> tier (Tinggi >= {TIER_CUTS['tinggi']}, Sedang >= {TIER_CUTS['sedang']}, selain itu Rendah).\n"
+OOT["tier"] = tier_of(OOT.score.values)
+tt_oot = tier_table(OOT, "oot"); print("\nRINGKASAN TIER (OOT):\n", tt_oot.round(3).to_string(index=False))
+print(f"\nPILIHAN OPERASIONAL: skor model asli per alert -> tier (Tinggi >= {TIER_CUTS['tinggi']}, Sedang >= {TIER_CUTS['sedang']}, selain itu Rendah).\n"
       "Alasan: alert muncul per transaksi, sehingga keputusan harus bisa diambil dari skor satu alert tanpa menunggu alert lain.\n"
-      "Tier mengatur URUTAN dan SLA review, bukan apakah alert di-review. Top-% per bulan hanya dipakai untuk analisis kapasitas.")
+      "Skor TIDAK dikalibrasi dan tidak dibaca sebagai probabilitas. Tier mengatur URUTAN dan SLA review, bukan apakah alert di-review. Top-% per bulan hanya dipakai untuk analisis kapasitas.")
 
 # ----------------------------------------------------------------------------
 # FASE 8 - Evaluasi TEST (1x)
@@ -467,7 +452,7 @@ hdr("FASE 8 - EVALUASI TEST (2026-06) - 1x")
 final_model = mk(BEST).fit(DEV[FINAL], DEV.y)
 TEST = TEST.copy(); TEST["score"] = final_model.predict_proba(TEST[FINAL])[:, 1]
 TEST["rank_pct"] = TEST.score.rank(ascending=False, method="first") / len(TEST)
-TEST["p_cal"] = apply_platt(TEST.score.values, CAL_OOT); TEST["tier"] = tier_of(TEST.p_cal.values)
+TEST["tier"] = tier_of(TEST.score.values)
 TEST["flag"] = TEST.tier.isin(["Tinggi", "Sedang"])   # flag operasional = tier Tinggi + Sedang
 yt, st, ft = TEST.y.values, TEST.score.values, TEST.flag.values
 auc_t, pr_t = roc_auc_score(yt, st), average_precision_score(yt, st)
@@ -488,10 +473,7 @@ print(f"PR-AUC = {pr_t:.4f}  CI95 [{ci(1)[0]:.4f}, {ci(1)[1]:.4f}]  (base rate {
 print(f"@ flag (tier Tinggi+Sedang): n_flag={n_flag} (CI {ci(2)[0]:.0f}-{ci(2)[1]:.0f}) | "
       f"precision={prec_t:.3f} CI[{ci(3)[0]:.3f},{ci(3)[1]:.3f}] | recall={rec_t:.3f} CI[{ci(4)[0]:.3f},{ci(4)[1]:.3f}]")
 
-# Kalibrasi & tier di Test (1x)
-cm_raw, cm_cal = calib_metrics(yt, st), calib_metrics(yt, TEST.p_cal.values)
-print("\nKALIBRASI DI TEST:  (slope 1 & intercept 0 = ideal; Brier/logloss/ECE lebih kecil = lebih baik)")
-print(pd.DataFrame({"skor_mentah": cm_raw, "terkalibrasi": cm_cal}).round(4).to_string())
+# Tier di Test (1x)
 tt_test = tier_table(TEST, "test"); print("\nRINGKASAN TIER (Test):\n", tt_test.round(3).to_string(index=False))
 save(pd.concat([tt_oot, tt_test], ignore_index=True), "tier_summary_v3.csv")
 f30 = (TEST.rank_pct <= RANK_PCT).values; tp30 = int((f30 & (yt == 1)).sum())
@@ -508,6 +490,14 @@ print("\nLIFT / GAINS (decile):\n", g.round(3).to_string(index=False)); save(g, 
 # Simulasi lengkap Test + data siap-pakai untuk halaman HTML (menimpa data lama)
 TEST_GRID = sim_grid(TEST, "test"); save(TEST_GRID, "simulation_test_v3.csv")
 print("\nSIMULASI TEST (threshold skor & top-%):\n", TEST_GRID.round(3).to_string(index=False))
+# Tabel skor vs tingkat suspicious historis per rentang 0.1 (skor asli, tanpa kalibrasi)
+cb = []
+for nm_, d_ in [("test", TEST), ("oot", OOT)]:
+    for b_ in range(10):
+        lo_, hi_ = b_ / 10, (b_ + 1) / 10
+        m_ = (d_.score >= lo_) & ((d_.score < hi_) if b_ < 9 else (d_.score <= 1))
+        cb.append(dict(split=nm_, bin_lo=lo_, bin_hi=hi_, n=int(m_.sum()), n_susp=int(d_.y[m_].sum())))
+save(pd.DataFrame(cb), "score_bins_v3.csv")
 sim_json = {}
 for nm, gdf in [("test", TEST_GRID), ("oot", thr)]:
     sim_json[nm] = {"n_total": int(gdf.n_total.iloc[0]), "n_pos": int(gdf.n_pos.iloc[0])}
@@ -572,17 +562,13 @@ def reasons(model, d, feats, k=3):
 hdr("FASE 9 - OUTPUT")
 ALL = df.copy()
 ALL["score"] = final_model.predict_proba(ALL[FINAL])[:, 1]
-CAL_PROD = fit_platt(np.concatenate([OOT.score.values, TEST.score.values]), np.concatenate([OOT.y.values, TEST.y.values]))  # produksi: OOT + Test (setelah evaluasi final)
-ALL["p_cal"] = apply_platt(ALL.score.values, CAL_PROD); ALL["tier"] = tier_of(ALL.p_cal.values)
+ALL["tier"] = tier_of(ALL.score.values)
 ALL["flag_recommended"] = ALL.tier.isin(["Tinggi", "Sedang"]).astype(int)
 ALL["top_reasons"] = reasons(final_model, ALL, FINAL)
 ALL["split"] = np.where(ALL.m == TEST_M, "test", np.where(ALL.m == VAL_M, "validate(in-sample)", "train(in-sample)"))
-save(ALL[["key1", "accountid", "alert_month", "score", "p_cal", "tier", "flag_recommended", "top_reasons", "split"]],
+save(ALL[["key1", "accountid", "alert_month", "score", "tier", "flag_recommended", "top_reasons", "split"]],
      "scored_all_key1_v3.csv")
 final_model.save_model(OUT + "xgb_production_v3.json"); print("[saved] xgb_production_v3.json")
-json.dump(dict(method="Platt: logit(p_cal) = intercept + slope * logit(skor model)", intercept=CAL_PROD[0], slope=CAL_PROD[1],
-               tier_cuts=TIER_CUTS, fit_on="prediksi OOT + Test", n_fit=int(len(OOT) + len(TEST)), model_file="xgb_production_v3.json"),
-          open(OUT + "calibrator_v3.json", "w"), indent=2); print("[saved] calibrator_v3.json")
 
 card = dict(
     excluded_manually=EXCLUDE_MANUAL,
@@ -594,9 +580,7 @@ card = dict(
     features_final=FINAL, feature_groups={c: GROUP[c] for c in FINAL}, params=BEST,
     feature_selection=dict(method="stability selection (permutation importance OOT, banyak seed)", n_seeds=STAB_SEEDS, min_freq=STAB_MIN_FREQ,
                            auc_oot_set_stabil=a_st, auc_oot_pool_penuh=float(base_auc)),
-    calibration=dict(method="Platt", intercept_oot=CAL_OOT[0], slope_oot=CAL_OOT[1], metrics_test_mentah=cm_raw, metrics_test_terkalibrasi=cm_cal,
-                     intercept_prod=CAL_PROD[0], slope_prod=CAL_PROD[1]),
-    threshold=dict(strategy="tier_by_calibrated_probability", tier_cuts=TIER_CUTS, tier_summary_test=tt_test.to_dict("records"),
+    threshold=dict(strategy="tier_by_model_score_uncalibrated", tier_cuts=TIER_CUTS, tier_summary_test=tt_test.to_dict("records"),
                    f05_best_oot=best_f05.to_dict("records")),
     metrics_oot=dict(auc_folds=oot_aucs, auc_mean=float(np.mean(oot_aucs)), auc_std=float(np.std(oot_aucs))),
     metrics_test=dict(auc=auc_t, auc_ci95=ci(0).tolist(), pr_auc=pr_t, pr_auc_ci95=ci(1).tolist(), n_flag=n_flag,
@@ -608,7 +592,7 @@ card = dict(
         "Data kecil (824 alert, 6 bulan, test satu bulan) -> CI lebar; AUC test tidak boleh dibaca sebagai angka pasti.",
         "Fitur counterparty popularity dihitung dari snapshot bulanan: risiko leakage ringan (lihat ablation).",
         "Skor pada baris train/validate di scored_all adalah in-sample (optimistis); gunakan hanya baris split=test untuk evaluasi.",
-        "Skor dikalibrasi (Platt) dari prediksi OOT dan dievaluasi di Test; data kecil sehingga batas tier adalah perkiraan. Kalibrasi harus diulang setiap model dilatih ulang.",
+        "Skor adalah skor ranking model, bukan probabilitas terkalibrasi (jangan dibaca sebagai peluang fraud). Tier memakai batas skor tetap; tingkat suspicious historis per tier hanya gambaran dengan rentang ketidakpastian lebar, dan batas ditinjau ulang setiap model dilatih ulang.",
         "Run ini adalah revisi (n_channel_l3m dibuang) setelah test 2026-06 pernah dilihat di run sebelumnya: angka test tidak lagi 100% murni; andalkan OOT untuk perbandingan.",
         "Perlu monitoring PSI dan refit berkala; drift >0.25 = tinjau ulang."])
 json.dump(card, open(OUT + "model_card_v3.json", "w"), indent=2, default=py); print("[saved] model_card_v3.json")
@@ -619,7 +603,6 @@ print(f"AUC OOT   : {np.mean(oot_aucs):.4f} ± {np.std(oot_aucs):.4f}")
 print(f"AUC test  : {auc_t:.4f}  CI95 [{ci(0)[0]:.4f}, {ci(0)[1]:.4f}]")
 print(f"@ flag (tier Tinggi+Sedang): n_flag={n_flag} | precision={prec_t:.3f} | recall={rec_t:.3f}")
 print("Tier (Test):", {r["tier"]: (r["n"], round(r["susp_rate"], 3)) for r in tt_test.to_dict("records")})
-print(f"Kalibrasi Test: Brier {cm_raw['brier']:.4f} -> {cm_cal['brier']:.4f} | ECE {cm_raw['ece']:.3f} -> {cm_cal['ece']:.3f} | slope {cm_raw['cal_slope']:.2f} -> {cm_cal['cal_slope']:.2f}")
 print("Ablation (delta AUC test):", {r["group"]: round(r.get("delta_test", np.nan), 4) for r in abl.to_dict("records")})
 t5 = ALL[ALL.split == "test"].sort_values("score", ascending=False).head(5)
 print("\nTop-5 alert (test) + reason code:")
