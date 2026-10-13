@@ -22,7 +22,7 @@ import xgboost as xgb
 warnings.filterwarnings("ignore")
 SEED = 42
 PATH = "/home/cdsw/parquet_output/result/trx_all_enriched_v2.parquet"
-OUT = "/home/cdsw/profiling_phase2/output/v3_no_channel/"
+OUT = "/home/cdsw/profiling_phase2/output/v3_2/"
 os.makedirs(OUT, exist_ok=True)
 pd.set_option("display.width", 220, "display.max_columns", 50, "display.max_rows", 200)
 
@@ -290,8 +290,12 @@ print(f"\nPOOL kandidat model ({len(POOL)}): {POOL}")
 # ----------------------------------------------------------------------------
 # FASE 4 - Rolling-origin CV (DEV)
 # ----------------------------------------------------------------------------
-FOLDS = [(["2026-01"], ["2026-02"]), (["2026-01", "2026-02"], ["2026-03"]),
-         (["2026-01", "2026-02", "2026-03", "2026-04"], ["2026-05"])]
+# Expanding window, sama dengan v4: tiap fold dilatih minimal 2 bulan, diuji di bulan berikutnya.
+# (v3 lama: fold 1 hanya dilatih Jan dan April tidak pernah diuji.)
+DEV_MONTHS = sorted(DEV.m.unique())
+MIN_TRAIN_MONTHS = 2
+FOLDS = [(DEV_MONTHS[:i], [DEV_MONTHS[i]]) for i in range(MIN_TRAIN_MONTHS, len(DEV_MONTHS))]
+print("Rolling-origin folds:", [(f"{a[0]}..{a[-1]}", b[0]) for a, b in FOLDS])
 
 def mk(p):
     return xgb.XGBClassifier(n_estimators=p["n_estimators"], max_depth=p["max_depth"], learning_rate=p["lr"],
@@ -511,7 +515,8 @@ card = dict(
     purpose="Prioritisasi alert FDS (ranking/triage), BUKAN deteksi fraud absolut. Label = disposition analis (mewarisi bias analis).",
     data=dict(file=PATH, filter="flag=='FDS'", n_alerts=len(df), n_positive=int(df.y.sum()), base_rate=float(df.y.mean()),
               n_accounts=int(df.accountid.nunique()), months=sorted(df.m.unique().tolist()),
-              split=dict(train=TRAIN_M, validate=VAL_M, test=TEST_M), skipped_whitelist_cols=skipped),
+              split=dict(train=TRAIN_M, validate=VAL_M, test=TEST_M), skipped_whitelist_cols=skipped,
+              rolling_origin_folds=[dict(train=a, test=b) for a, b in FOLDS]),
     features_final=FINAL, feature_groups={c: GROUP[c] for c in FINAL}, params=BEST,
     threshold=dict(strategy=f"rank_percentile_top_{int(RANK_PCT*100)}pct_per_month",
                    f05_best_oot=best_f05.to_dict("records")),
